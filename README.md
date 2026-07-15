@@ -43,3 +43,10 @@ Links
 - [Discord](https://discord.gg/JEz2CkSaC) — join the community for support, update notifications, or if you want to share banner art!
 - ☕ [Ko-fi](https://ko-fi.com/sockywocky7#payment-widget) — support development.
 
+-----
+
+Why is the git history gone?
+
+so i may have copied a picture of myself into the banners folder accidentally when i was adding banners, and i pushed it not realising it was there, so when i realised i panic deleted the repo and tried deleting that commit locally, and i may have deleted the entire git file.... sorry!
+please reopen any issues you had open previously.
+
