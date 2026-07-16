@@ -1,7 +1,7 @@
 ### Why isnt there artworks for everything?
 banner artwork dosent span to every addon / mod available as all banners are community made.
-- if you want to contribute banner art, create a PR or join the Discord and make a post.
-- if you want to request banner art, make a Feature request titled with (banner request(s)) and explain what banner you want made and a contributor might pick it up and make it. you can also ask in the Discord.
+- if you want to contribute banner art, create a PR or join the [Discord](https://discord.gg/WgYePqcRTk) and make a post.
+- if you want to request banner art, make a Feature request titled with (banner request(s)) and explain what banner you want made and a contributor might pick it up and make it. you can also ask in the [Discord.](https://discord.gg/WgYePqcRTk)
 
 
 ![this is an actual banner from the mod!](https://cdn.modrinth.com/data/cached_images/8f314bb39409d3177ac81e43817c4d856b178b81_0.webp)
@@ -42,6 +42,6 @@ Links
 -----
 
 - [Issue Tracker](https://github.com/SockyWocky7/createaddonorganizer/issues) — found a bug or have a feature request? Report it here.
-- [Discord](https://discord.gg/JEz2CkSaC) — join the community for support, update notifications, or if you want to share banner art!
+- [Discord](https://discord.gg/WgYePqcRTk) — join the community for support, update notifications, or if you want to share banner art!
 - ☕ [Ko-fi](https://ko-fi.com/sockywocky7#payment-widget) — support development.
 
