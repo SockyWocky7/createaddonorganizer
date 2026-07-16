@@ -1,6 +1,8 @@
-### Why no artworks?
-There are currently no artwork banners for any mod because..... i suck at pixel art.
-**BUT**, if you want to contribute art for a mod, visit the [Discord](https://discord.gg/gfVqfFQ3KB) and upload your banner artwork in the channel! if it gets added to the mod, you will be added to the credits! thanks :)
+### Why isnt there artworks for everything?
+banner artwork dosent span to every addon / mod available as all banners are community made.
+- if you want to contribute banner art, create a PR or join the Discord and make a post.
+- if you want to request banner art, make a Feature request titled with (banner request(s)) and explain what banner you want made and a contributor might pick it up and make it. you can also ask in the Discord.
+
 
 ![this is an actual banner from the mod!](https://cdn.modrinth.com/data/cached_images/8f314bb39409d3177ac81e43817c4d856b178b81_0.webp)
 
@@ -42,11 +44,4 @@ Links
 - [Issue Tracker](https://github.com/SockyWocky7/createaddonorganizer/issues) — found a bug or have a feature request? Report it here.
 - [Discord](https://discord.gg/JEz2CkSaC) — join the community for support, update notifications, or if you want to share banner art!
 - ☕ [Ko-fi](https://ko-fi.com/sockywocky7#payment-widget) — support development.
-
------
-
-Why is the git history gone?
-
-so i may have copied a picture of myself into the banners folder accidentally when i was adding banners, and i pushed it not realising it was there, so when i realised i panic deleted the repo and tried deleting that commit locally, and i may have deleted the entire git file.... sorry!
-please reopen any issues you had open previously.
 
