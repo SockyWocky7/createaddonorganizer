@@ -22,6 +22,7 @@ import com.sockywocky.createaddonorganizer.mixin.CreativeModeInventoryScreenAcce
 import com.sockywocky.createaddonorganizer.mixin.CreativeModeTabsAccessor;
 import com.sockywocky.createaddonorganizer.mixin.ItemPickerMenuAccessor;
 
+import net.mcexpanded.fancytabsections.FTSInternal;
 import net.mcexpanded.fancytabsections.FancyTabSections;
 import net.mcexpanded.fancytabsections.Section.Section;
 import net.mcexpanded.fancytabsections.creativetab.ConglomerateOfItems;
@@ -446,12 +447,18 @@ public class createaddonorganizer {
         String nameOverride = Config.sectionNameOverride(id);
         Component title = nameOverride != null ? Component.literal(nameOverride) : tabDisplayName;
         String bannerRef = Config.bannerRefFor(id);
+        CaoSection section;
         if (bannerRef != null) {
             ResourceLocation texture = BannerTextures.resolve(bannerRef);
-            if (texture != null) {
-                return new CaoSection(id, title, Config.bannerColorFor(id), texture, Config.textColorFor(id), conglomerate);
-            }
+            section = texture != null
+                    ? new CaoSection(id, title, Config.bannerColorFor(id), texture, Config.textColorFor(id), conglomerate)
+                    : new CaoSection(id, title, Config.bannerColorFor(id), Config.textColorFor(id), conglomerate);
+        } else {
+            section = new CaoSection(id, title, Config.bannerColorFor(id), Config.textColorFor(id), conglomerate);
         }
-        return new CaoSection(id, title, Config.bannerColorFor(id), Config.textColorFor(id), conglomerate);
+        if (Config.showCollapseToggle() && Config.isSectionCollapsed(id)) {
+            FTSInternal.collapse(section, false);
+        }
+        return section;
     }
 }

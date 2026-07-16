@@ -1007,11 +1007,9 @@ public class ColorPickerScreen extends Screen {
 
         private class Row extends ContainerObjectSelectionList.Entry<Row> {
             private final String ref;
-            private final ResourceLocation texture;
 
             Row(String ref) {
                 this.ref = ref;
-                this.texture = BannerTextures.resolve(ref);
             }
 
             @Override
@@ -1026,6 +1024,7 @@ public class ColorPickerScreen extends Screen {
 
             @Override
             public boolean mouseClicked(double mx, double my, int button) {
+                ResourceLocation texture = BannerTextures.resolve(ref);
                 if (button == 0 && texture != null) {
                     selectedTexture = texture;
                     selectedRef = ref;
@@ -1047,6 +1046,7 @@ public class ColorPickerScreen extends Screen {
                 } else if (hovered) {
                     outline(g, bx - 1, by - 1, bx + BannerTextures.WIDTH + 1, by + BannerTextures.HEIGHT + 1, 0x80FFFFFF);
                 }
+                ResourceLocation texture = BannerTextures.resolve(ref);
                 boolean bannerHovered = BannerAnimation.isHovering(bx, by, BannerTextures.WIDTH, BannerTextures.HEIGHT, mouseX, mouseY);
                 if (texture != null) {
                     Optional<BannerAnimation.AnimInfo> anim = BannerAnimation.get(texture);
@@ -1078,11 +1078,9 @@ public class ColorPickerScreen extends Screen {
 
         private class Row extends ContainerObjectSelectionList.Entry<Row> {
             private final String ref;
-            private final ResourceLocation texture;
 
             Row(String ref) {
                 this.ref = ref;
-                this.texture = BoxTextures.resolve(ref);
             }
 
             @Override
@@ -1097,6 +1095,7 @@ public class ColorPickerScreen extends Screen {
 
             @Override
             public boolean mouseClicked(double mx, double my, int button) {
+                ResourceLocation texture = BoxTextures.resolve(ref);
                 if (button == 0 && texture != null) {
                     selectedBoxTexture = texture;
                     selectedBoxRef = ref;
@@ -1119,6 +1118,7 @@ public class ColorPickerScreen extends Screen {
                 } else if (hovered) {
                     outline(g, bx - 1, by - 1, bx + previewW + 1, by + previewH + 1, 0x80FFFFFF);
                 }
+                ResourceLocation texture = BoxTextures.resolve(ref);
                 OptionalInt nativeW = texture != null ? BoxTextures.nativeWidth(texture) : OptionalInt.empty();
                 if (texture != null && nativeW.isPresent()) {
                     BoxTextures.blit3Slice(g, texture, bx, by, previewW, previewH, nativeW.getAsInt(), BoxTextures.HEIGHT);

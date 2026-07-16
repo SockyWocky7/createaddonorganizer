@@ -37,6 +37,11 @@ public class Config {
                     "no search box or sidebar.")
             .define("classicOrganizerLayout", true);
 
+    public static final ModConfigSpec.BooleanValue SHOW_COLLAPSE_TOGGLE = BUILDER
+            .comment("Show Fancy Tab Sections' built-in collapse/expand button on the right side of each",
+                    "section banner. Off by default since this mod's own banners aren't designed for it.")
+            .define("showCollapseToggle", false);
+
     static {
         BUILDER.comment("Which addon tabs get absorbed, and which Create tab each one folds into.")
                 .push("absorption");
@@ -176,11 +181,6 @@ public class Config {
                     "of each glyph) instead of a single flat colour.")
             .define("twoToneText", true);
 
-    public static final ModConfigSpec.BooleanValue SHOW_COLLAPSE_TOGGLE = BUILDER
-            .comment("Show Fancy Tab Sections' built-in collapse/expand button on the right side of each",
-                    "section banner. Off by default since this mod's own banners aren't designed for it.")
-            .define("showCollapseToggle", false);
-
     public static final ModConfigSpec.IntValue DEFAULT_TEXT_SECONDARY_COLOR = BUILDER
             .comment("Default secondary text colour as an ARGB integer (default opaque light grey,",
                     "HSV 0/0/80%).")
@@ -233,6 +233,11 @@ public class Config {
                     "Format: \"<tabId> = <custom name>\". Managed by ctrl+click-to-rename in the section list.")
             .defineListAllowEmpty("sectionNames", List.of(), () -> "somemod:main = My Custom Name", Config::isValidSectionName);
 
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> COLLAPSED_SECTIONS = BUILDER
+            .comment("Section tab IDs currently collapsed via Fancy Tab Sections' collapse toggle (only",
+                    "relevant while showCollapseToggle is on). Remembered across tab rebuilds and restarts.")
+            .defineListAllowEmpty("collapsedSections", List.of(), () -> "somemod:main", Config::isValidTabId);
+
     static {
         BUILDER.pop();
         BUILDER.comment("The left-side section-index jump list on the creative screen.")
@@ -281,6 +286,8 @@ public class Config {
         applyAbsorption(FORCE_INCLUDE.getDefault(), FORCE_EXCLUDE.getDefault(), ROUTES.getDefault(),
                 EXTRA_MAIN_SECTIONS.getDefault());
         setRainbowMode(RAINBOW_MODE.getDefault());
+        COLLAPSED_SECTIONS.set(COLLAPSED_SECTIONS.getDefault());
+        SPEC.save();
     }
 
     public static void applyOrganization(List<? extends String> sectionOrder, List<? extends String> sectionNames) {
@@ -619,6 +626,25 @@ public class Config {
 
     public static boolean showCollapseToggle() {
         return SHOW_COLLAPSE_TOGGLE.get();
+    }
+
+    public static boolean isSectionCollapsed(ResourceLocation id) {
+        return contains(COLLAPSED_SECTIONS.get(), id);
+    }
+
+    public static void setSectionCollapsed(ResourceLocation id, boolean collapsed) {
+        if (collapsed == isSectionCollapsed(id)) {
+            return;
+        }
+        List<String> updated;
+        if (collapsed) {
+            updated = new ArrayList<>(COLLAPSED_SECTIONS.get());
+            updated.add(id.toString());
+        } else {
+            updated = withoutValue(COLLAPSED_SECTIONS.get(), id);
+        }
+        COLLAPSED_SECTIONS.set(updated);
+        SPEC.save();
     }
 
     public static boolean classicOrganizerLayout() {

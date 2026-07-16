@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.sockywocky.createaddonorganizer.AbsorbedTabs;
+import com.sockywocky.createaddonorganizer.client.CollapseSync;
 import com.sockywocky.createaddonorganizer.client.SectionIndexPanel;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -53,6 +54,7 @@ public class CreativeModeInventoryScreenMixin {
     private void createaddonorganizer$renderSectionIndex(GuiGraphics guiGraphics, int mouseX, int mouseY,
             float partialTick, CallbackInfo ci) {
         SectionIndexPanel.render((CreativeModeInventoryScreen) (Object) this, guiGraphics, mouseX, mouseY);
+        CollapseSync.tick();
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)

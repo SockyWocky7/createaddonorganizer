@@ -40,13 +40,6 @@ config="${mod_id}-simulated.mixins.json"
     side="CLIENT"
 
 [[dependencies.${mod_id}]]
-    modId="fancytabsections"
-    type="required"
-    versionRange="[5.0,6.0)"
-    ordering="AFTER"
-    side="CLIENT"
-
-[[dependencies.${mod_id}]]
     modId="simulated"
     type="optional"
     versionRange="[1.0,1.4)"
