@@ -1,10 +1,15 @@
-### Why no artworks?
-There are currently no artwork banners for any mod because..... i suck at pixel art.
-**BUT**, if you want to contribute art for a mod, visit the [Discord](https://discord.gg/gfVqfFQ3KB) and upload your banner artwork in the channel! if it gets added to the mod, you will be added to the credits! thanks :)
+### Why arent artworks for everything?
+Most create mod addons already have an banner but not every one of them because..... i suck at pixel art/image editing.
+**BUT**, if you want to contribute art for a mod, visit the [Discord](https://discord.gg/BzgNNpW5Nz) and upload your banner artwork in the channel! if it gets added to the mod, you will be added to the credits! thanks :)
 
-![this is an actual banner from the mod!](https://cdn.modrinth.com/data/cached_images/8f314bb39409d3177ac81e43817c4d856b178b81_0.webp)
+![!](image.png)
 
-Have you ever been in creative mode with a ton of create mod addons and found it annoying that EVERY SINGLE ONE has its own tab? well, **Worry no more!** CAO sorts every create addon into sections contained within the base "Create" tab, and the "Create's Building Blocks" tab. it also leaves create aeronautics untouched.
+Have you ever been in Creative mode with a ton of Create mod add-ons and found it annoying that every single one has its own tab? Well, **worry no more!**
+
+CAO organizes all Create add-ons into sections within the base "Create" tab and the "Create's Building Blocks" tab.
+
+It also includes compatibility with Create Aeronautics, meaning you can add mods to it. However, since Create Aeronautics uses a different system for adding sections, the original Aeronautics sections cannot be modified.
+
 
 
 <details>
@@ -42,11 +47,4 @@ Links
 - [Issue Tracker](https://github.com/SockyWocky7/createaddonorganizer/issues) — found a bug or have a feature request? Report it here.
 - [Discord](https://discord.gg/JEz2CkSaC) — join the community for support, update notifications, or if you want to share banner art!
 - ☕ [Ko-fi](https://ko-fi.com/sockywocky7#payment-widget) — support development.
-
------
-
-Why is the git history gone?
-
-so i may have copied a picture of myself into the banners folder accidentally when i was adding banners, and i pushed it not realising it was there, so when i realised i panic deleted the repo and tried deleting that commit locally, and i may have deleted the entire git file.... sorry!
-please reopen any issues you had open previously.
 
