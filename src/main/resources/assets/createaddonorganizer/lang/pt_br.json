@@ -165,6 +165,7 @@
   "createaddonorganizer.devmode.activated": "Modo dev ativado!",
   "createaddonorganizer.devmode.deactivated": "Modo dev desativado!",
   "createaddonorganizer.devmode.writeFailed": "Não foi possível salvar a predefinição integrada: %s",
+  
   "createaddonorganizer.banner.noneForAddon": "Não há banners para este complemento.",
   "createaddonorganizer.box.delete.message": "Isto remove permanentemente a imagem enviada %s. \nQualquer seção que ainda esteja em uso voltará a ter uma cor lisa na próxima vez que for reconstruída.",
   "createaddonorganizer.box.delete.title": "Excluir esta textura de caixa?",
