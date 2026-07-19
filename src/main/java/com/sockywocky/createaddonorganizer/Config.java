@@ -240,14 +240,17 @@ public class Config {
 
     static {
         BUILDER.pop();
-        BUILDER.comment("The left-side section-index jump list on the creative screen.")
+        BUILDER.comment("The left-side section-index jump list on the creative screen, for tabs Fancy Tab",
+                        "Sections itself doesn't cover (Simulated-family addon tabs). Since FTS 6.0, FTS",
+                        "renders its own jump list for every tab it manages, so this style only applies there.")
                 .push("interface");
     }
 
     public enum IndexPanelStyle { VANILLA, DARK, REFURBISHED, BACKPORT }
 
     public static final ModConfigSpec.EnumValue<IndexPanelStyle> INDEX_PANEL_STYLE = BUILDER
-            .comment("Visual style of the section-index panel:",
+            .comment("Visual style of the section-index panel on Simulated-family addon tabs",
+                    "(e.g. Create: Aeronautics) - Fancy Tab Sections' own tabs use FTS's built-in style instead:",
                     "VANILLA - light-grey raised panel matching the vanilla inventory (default).",
                     "DARK - the original flat dark panel.",
                     "REFURBISHED - beveled side tabs in the style of MrCrayfish's Refurbished Furniture.",

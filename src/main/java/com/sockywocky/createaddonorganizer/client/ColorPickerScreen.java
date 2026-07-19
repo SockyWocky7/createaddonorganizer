@@ -283,12 +283,17 @@ public class ColorPickerScreen extends Screen {
             } else {
                 refs = BannerTextures.gallery();
             }
+            // A curated pool (unlike the full gallery, which only ever lists remote banners already
+            // confirmed downloaded) can reference a remote banner whose background sync hasn't finished
+            // yet; showing it anyway renders as a blank, invisible row instead of just being absent.
             for (String ref : refs) {
-                galleryList.add(ref);
+                if (BannerTextures.resolve(ref) != null) {
+                    galleryList.add(ref);
+                }
             }
             addRenderableWidget(galleryList);
             galleryList.setScrollAmount(restoreScroll);
-            bannerGalleryEmpty = refs.isEmpty();
+            bannerGalleryEmpty = galleryList.children().isEmpty();
         }
     }
 

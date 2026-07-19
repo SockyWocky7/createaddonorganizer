@@ -54,7 +54,7 @@
   "createaddonorganizer.configuration.interface": "Section Index Panel",
   "createaddonorganizer.configuration.interface.tooltip": "The collapsible section-index jump list on the left of the creative screen.",
   "createaddonorganizer.configuration.indexPanelStyle": "Panel Style",
-  "createaddonorganizer.configuration.indexPanelStyle.tooltip": "Visual style of the section-index jump list: Vanilla, Dark, Refurbished (Refurbished Furniture look), or Backport (Vanilla Backport look).",
+  "createaddonorganizer.configuration.indexPanelStyle.tooltip": "Visual style of the section-index jump list on Simulated-family addon tabs (e.g. Create: Aeronautics): Vanilla, Dark, Refurbished (Refurbished Furniture look), or Backport (Vanilla Backport look). Fancy Tab Sections' own tabs use FTS's built-in jump list instead.",
   "createaddonorganizer.index.style": "Index Panel",
   "createaddonorganizer.index.style.vanilla": "Vanilla",
   "createaddonorganizer.index.style.dark": "Dark",

@@ -63,6 +63,8 @@ public class createaddonorganizer {
     private static final int SKIP_EXAMPLES_PER_REASON = 10;
     private static int candidatesSeen = 0;
 
+    private static ResourceLocation lastReconciledTab = null;
+
     public createaddonorganizer(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         if (SimulatedSupport.isLoaded()) {
@@ -235,6 +237,29 @@ public class createaddonorganizer {
         }
         LOGGER.info("[CAO] another mod pruned items from final tab contents; realigning section rows for {}", changed);
         rebuildTabs(changed, params);
+    }
+
+    /**
+     * Some item-hiding mods (e.g. Item Obliterator, Reliable Remover) prune items from a tab's final
+     * contents via a mixin on {@code CreativeModeTab.buildContents}, and FTS only re-assembles a
+     * registered tab's merged contents (and re-runs that pipeline) when the tab is actually selected
+     * in the creative screen -- not once at world-join. Re-running reconciliation here, gated on the
+     * selected tab actually changing, catches whatever the currently viewed tab's real final contents
+     * are instead of relying solely on the one-time organize() snapshot.
+     *
+     * @return true if reconciliation ran (caller should refresh the screen's visible slots)
+     */
+    public static boolean reconcileOnTabView(ResourceLocation selectedTabId) {
+        if (selectedTabId == null || selectedTabId.equals(lastReconciledTab) || !MANAGED_PARENTS.contains(selectedTabId)) {
+            return false;
+        }
+        lastReconciledTab = selectedTabId;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.player == null) {
+            return false;
+        }
+        reconcilePrunedItems(createaddonorganizerClient.currentDisplayParams(mc));
+        return true;
     }
 
     private static void resetCreativeScrollIfOpen() {

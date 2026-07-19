@@ -84,7 +84,13 @@ public class SectionColorsScreen extends Screen {
     private final Screen parent;
     private final ModContainer container;
 
-    private final long openedMillis = System.currentTimeMillis();
+    // Stamped at the end of the FIRST init() rather than at construction: if building the row list
+    // (SectionCatalog.colorables() etc.) is slow, capturing this before that work would let the entrance
+    // animations' delay windows already be "elapsed" by the first render, skipping straight to the
+    // finished state instead of animating. rebuildWidgets() re-invokes init() without re-arming this,
+    // so a mid-session rebuild (e.g. from dragging a row) still doesn't replay the entrance animation.
+    private long openedMillis = System.currentTimeMillis();
+    private boolean animationArmed;
     private final String emptyStateText = EMPTY_STATE_LINES[new Random().nextInt(EMPTY_STATE_LINES.length)];
 
     private ColorList list;
@@ -233,6 +239,11 @@ public class SectionColorsScreen extends Screen {
             fadingButtons.add(saveButton);
             fadingButtons.add(addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> onClose())
                     .bounds(this.width / 2 + 71, footerY, 90, 20).build()));
+        }
+
+        if (!animationArmed) {
+            animationArmed = true;
+            openedMillis = System.currentTimeMillis();
         }
     }
 
