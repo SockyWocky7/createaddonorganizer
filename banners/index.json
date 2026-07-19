@@ -63,6 +63,8 @@
       { "file": "sophisticatedcore1.png", "v": 1 },
       { "file": "sophisticatedbackpacks1.png", "v": 1 },
       { "file": "stuffnadditions1.png", "v": 1 },
+      { "file": "basic.png", "v": 1 },
+      { "file": "mired1.png", "v": 1 },
       { "file": "spawn.png", "v": 1 }
     ]
   },
@@ -70,7 +72,8 @@
     "name": "Dolphin + Arthur",
     "color": "#44DEA5",
     "banners": [
-      { "file": "bnb2.png", "v": 1 }
+      { "file": "bnb2.png", "v": 1 },
+      { "file": "aquaticambitions1.png", "v": 1 }
     ]
   },
   {
@@ -126,6 +129,14 @@
     "color": "#9cb7e7",
     "banners": [
       { "file": "framed1.png", "v": 1 }
+    ]
+  },
+  {
+    "name": "Surprised",
+    "color": "#ff10f0",
+    "banners": [
+      { "file": "ratatouille1.png", "v": 1 },
+      { "file": "confectionery1.png", "v": 1 }
     ]
   }
 ]
