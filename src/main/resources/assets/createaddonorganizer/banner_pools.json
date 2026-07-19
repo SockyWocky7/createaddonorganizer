@@ -89,5 +89,8 @@
   ],
   "pipeorgans:pipe_organs": [
     "remote:soundofsteam1.png"
+  ],
+  "createframed:create_framed": [
+    "remote:createframed1.png"
   ]
 }
