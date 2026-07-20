@@ -7,8 +7,8 @@
     ]
   },
   {
-    "name": "Nixie Board",
-    "color": "#FFAA00",
+    "name": "Arthur",
+    "color": "#57bcff",
     "textures": [
       { "file": "nixieboard.png", "v": 2 }
     ]
