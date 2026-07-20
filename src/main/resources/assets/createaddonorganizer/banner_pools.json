@@ -75,7 +75,8 @@
   ],
   "create_vibrant_vaults:base": [
     "remote:vibrantvaults2.png",
-    "remote:vibrantvaults1.png"
+    "remote:vibrantvaults1.png",
+    "remote:vibrantvaults3.png"
   ],
   "railways:main": [
     "remote:SNR_locometal1.png",
@@ -100,5 +101,11 @@
   ],
   "createendertransmission:base": [
     "remote:endertransmission1.png"
+  ],
+  "electroenergetics:base": [
+    "remote:ElectroEnergistics1.png"
+  ],
+  "create_aeronautics_toolgun:main": [
+    "remote:Toolgun1.png"
   ]
 }
