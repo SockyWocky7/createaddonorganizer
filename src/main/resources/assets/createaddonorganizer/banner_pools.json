@@ -126,5 +126,14 @@
   "create_things_and_misc:tab": [
     "remote:miscsandthings1.png",
     "remote:miscsandthings2.png"
+  ],
+  "petrolsparts:base": [
+    "remote:petrolparts.png"
+  ],
+  "exposure:exposure": [
+    "remote:exposure1.png"
+  ],
+  "sable_kardanwelle:create_cardan_shafts": [
+    "remote:cardanshafts1.png"
   ]
 }
