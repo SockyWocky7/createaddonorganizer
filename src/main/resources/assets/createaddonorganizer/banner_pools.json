@@ -92,5 +92,10 @@
   ],
   "createframed:create_framed": [
     "remote:createframed1.png"
+  ],
+  "interiors:main": [
+    "remote:createinteriors1.png",
+    "remote:createinteriors2.png",
+    "remote:createinteriors3.png"
   ]
 }
