@@ -116,5 +116,15 @@
   ],
   "create_connected:main": [
     "remote:CreateConnected.png"
+  ],
+  "fluidlogistics:fluidlogistics_tab": [
+    "remote:fluidlogistics1.png"
+  ],
+  "create_sa:create_stuff_additions_tab": [
+    "remote:stuffnadditions1.png"
+  ],
+  "create_things_and_misc:tab": [
+    "remote:miscsandthings1.png",
+    "remote:miscsandthings2.png"
   ]
 }
