@@ -5,5 +5,12 @@
     "textures": [
       { "file": "debug_test.png", "v": 2 }
     ]
+  },
+  {
+    "name": "Nixie Board",
+    "color": "#FFAA00",
+    "textures": [
+      { "file": "nixieboard.png", "v": 2 }
+    ]
   }
 ]
