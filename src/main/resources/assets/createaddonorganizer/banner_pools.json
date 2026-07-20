@@ -107,5 +107,13 @@
   ],
   "create_aeronautics_toolgun:main": [
     "remote:Toolgun1.png"
+  ],
+  "drivebywire:base": [
+    "remote:DriveByWire1.png",
+    "remote:drivebywiretypewriter1.png",
+    "remote:drivebywiretypewriter2.png"
+  ],
+  "create_connected:main": [
+    "remote:CreateConnected.png"
   ]
 }
