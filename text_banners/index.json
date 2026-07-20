@@ -12,5 +12,12 @@
     "textures": [
       { "file": "nixieboard.png", "v": 2 }
     ]
+  },
+  {
+    "name": "The Tophatted Dolphin",
+    "color": "#30FF4B",
+    "textures": [
+      { "file": "stickynote.png", "v": 1 }
+    ]
   }
 ]
