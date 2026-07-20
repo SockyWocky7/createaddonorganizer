@@ -98,8 +98,7 @@
   ],
   "interiors:main": [
     "remote:createinteriors1.png",
-    "remote:createinteriors2.png",
-    "remote:createinteriors3.png"
+    "remote:createinteriors2.png"
   ],
   "createendertransmission:base": [
     "remote:endertransmission1.png"

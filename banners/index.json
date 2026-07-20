@@ -129,8 +129,7 @@
     "name": "lanlan3292",
     "color": "#9cb7e7",
     "banners": [
-      { "file": "createframed1.png", "v": 1 },
-      { "file": "createinteriors3.png", "v": 1 }
+      { "file": "createframed1.png", "v": 1 }
     ]
   },
   {
