@@ -30,10 +30,12 @@
     "remote:createnuclear1.png"
   ],
   "copycats:main": [
-    "remote:copycatsplus1.png"
+    "remote:copycatsplus1.png",
+    "remote:copycatsplus2.png"
   ],
   "copycats:functional": [
-    "remote:copycatsplus1.png"
+    "remote:copycatsplus1.png",
+    "remote:copycatsplus2.png"
   ],
   "createdieselgenerators:cdg_creative_tab": [
     "remote:Diesel1.png"
@@ -75,7 +77,8 @@
   ],
   "create_vibrant_vaults:base": [
     "remote:vibrantvaults2.png",
-    "remote:vibrantvaults1.png"
+    "remote:vibrantvaults1.png",
+    "remote:vibrantvaults3.png"
   ],
   "railways:main": [
     "remote:SNR_locometal1.png",
@@ -89,6 +92,36 @@
   ],
   "pipeorgans:pipe_organs": [
     "remote:soundofsteam1.png"
+  ],
+  "createendertransmission:base": [
+    "remote:endertransmission1.png"
+  ],
+  "electroenergetics:base": [
+    "remote:ElectroEnergistics1.png"
+  ],
+  "create_aeronautics_toolgun:main": [
+    "remote:Toolgun1.png"
+  ],
+  "drivebywire:base": [
+    "remote:DriveByWire1.png",
+    "remote:drivebywiretypewriter1.png",
+    "remote:drivebywiretypewriter2.png"
+  ],
+  "fluidlogistics:fluidlogistics_tab": [
+    "remote:fluidlogistics1.png"
+  ],
+  "create_things_and_misc:tab": [
+    "remote:miscsandthings1.png",
+    "remote:miscsandthings2.png"
+  ],
+  "petrolsparts:base": [
+    "remote:petrolparts.png"
+  ],
+  "exposure:exposure": [
+    "remote:exposure1.png"
+  ],
+  "sable_kardanwelle:create_cardan_shafts": [
+    "remote:cardanshafts1.png"
   ],
   "create_aquatic_ambitions:tab": [
     "remote:aquaticambitions1.png"

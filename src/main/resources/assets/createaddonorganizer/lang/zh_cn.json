@@ -156,7 +156,7 @@
   "createaddonorganizer.bannerAssign.unrestricted": "无限制",
   "createaddonorganizer.bannerPool.title": "横幅池 — %s",
   "createaddonorganizer.bannerPool.description": "点击横幅来允许/禁用它。留空 = 玩家将看到完整且不受限制的图库。",
-  "createaddonorganizer.bannerPool.save": "保存横幅池",
+  "createaddonorganizer.bannerPool.save": "保存至横幅池",
   "createaddonorganizer.bannerPool.saved": "横幅池已保存",
   "createaddonorganizer.colors.deleteMain.title": "删除主板块?",
   "createaddonorganizer.colors.deleteMain.message": "这将移除 \"%s\" 的主板块身份。它本身的标签页将恢复独立，所有折叠在其中的板块都将移回其默认标签页。此操作无法撤销。",
@@ -239,5 +239,7 @@
   "createaddonorganizer.configuration.titleTextShadow.tooltip": "默认：使用 vanilla 阴影绘制章节标题文本。\n下面的每节覆盖优先。",
   "createaddonorganizer.configuration.titleTextShadowSections": "每节标题文本阴影",
   "createaddonorganizer.configuration.titleTextShadowSections.tooltip": "各个部分的投影开/关覆盖，每个部分一个\"<tabId> = true\"或\"<tabId> = false\"条目。\n当未设置某个部分时，会回退到默认标题文本阴影 - 从横幅编辑器的阴影面板进行管理。",
-  "createaddonorganizer.devmode.lockedout": "密码错误过多。\n请在 %ss 后重试。"
+  "createaddonorganizer.devmode.lockedout": "密码错误过多。\n请在 %ss 后重试。",
+  "createaddonorganizer.configuration.bannerPoolsManifestUrl": "横幅池清单 URL",
+  "createaddonorganizer.configuration.bannerPoolsManifestUrl.tooltip": "获取在线横幅池清单的地址 -- 按标签页整理的精选横幅仅在\n\"获取在线横幅池清单\" 开启时使用。\n修改 URL 处的文件即可更新池，\n而无需更新模组。"
 }
