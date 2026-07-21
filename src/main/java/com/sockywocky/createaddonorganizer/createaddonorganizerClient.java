@@ -2,6 +2,7 @@ package com.sockywocky.createaddonorganizer;
 
 import com.sockywocky.createaddonorganizer.client.DevMode;
 import com.sockywocky.createaddonorganizer.client.Notice;
+import com.sockywocky.createaddonorganizer.client.RemoteBannerPools;
 import com.sockywocky.createaddonorganizer.client.RemoteBanners;
 import com.sockywocky.createaddonorganizer.client.RemoteBoxTextures;
 import com.sockywocky.createaddonorganizer.client.SectionColorsScreen;
@@ -49,6 +50,8 @@ public class createaddonorganizerClient {
             remoteSyncStarted = true;
             RemoteBanners.loadCacheFromDisk();
             RemoteBanners.syncAsync();
+            RemoteBannerPools.loadCacheFromDisk();
+            RemoteBannerPools.syncAsync();
             RemoteBoxTextures.loadCacheFromDisk();
             RemoteBoxTextures.syncAsync();
         }

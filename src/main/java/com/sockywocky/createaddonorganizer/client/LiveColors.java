@@ -18,11 +18,11 @@ import net.minecraft.resources.ResourceLocation;
 public final class LiveColors {
     private LiveColors() {}
 
-    public static void apply(ResourceLocation id, int argb) {
+    public static void apply(ResourceLocation id, ColorSpec spec) {
         if (isSimulated(id)) {
             return;
         }
-        replace(id, s -> s.withBanner(argb));
+        replace(id, s -> s.withBanner(spec));
     }
 
     public static void applyTexture(ResourceLocation id, ResourceLocation texture) {
@@ -32,11 +32,11 @@ public final class LiveColors {
         replace(id, s -> s.withTexture(texture));
     }
 
-    public static void applyTextColor(ResourceLocation id, int argb) {
+    public static void applyTextColor(ResourceLocation id, ColorSpec spec) {
         if (isSimulated(id)) {
             return;
         }
-        replace(id, s -> s.withTextColor(argb));
+        replace(id, s -> s.withTextColor(spec));
     }
 
     public static void applyTitle(ResourceLocation id, Component title) {

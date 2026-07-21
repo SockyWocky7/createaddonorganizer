@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import com.sockywocky.createaddonorganizer.client.ColorSpec;
 import com.sockywocky.createaddonorganizer.client.ColorUtil;
 import com.sockywocky.createaddonorganizer.client.simulated.SimulatedSupport;
 
@@ -33,113 +34,113 @@ public class Config {
     private static final Set<String> BUILTIN_EXCLUDE = Set.of();
 
     public static final ModConfigSpec.BooleanValue CLASSIC_ORGANIZER_LAYOUT = BUILDER
-            .comment("Use the classic (pre-1.3) organizer menu: centered column, an Edit button on every row,",
-                    "no search box or sidebar.")
+            .comment("Use the classic (pre-1.3) organizer menu: centered column, per-row Edit button, no search or sidebar.")
             .define("classicOrganizerLayout", true);
 
     public static final ModConfigSpec.BooleanValue SHOW_COLLAPSE_TOGGLE = BUILDER
-            .comment("Show Fancy Tab Sections' built-in collapse/expand button on the right side of each",
-                    "section banner. Off by default since this mod's own banners aren't designed for it.")
+            .comment("Show Fancy Tab Sections' collapse/expand button on each banner. Off by default.")
             .define("showCollapseToggle", false);
 
+    public static final ModConfigSpec.BooleanValue STICKY_SECTION_BANNERS = BUILDER
+            .comment("Keep each section's banner pinned to the top while scrolling its items, instead of scrolling away.")
+            .define("stickySectionBanners", false);
+
     static {
-        BUILDER.comment("Which addon tabs get absorbed, and which Create tab each one folds into.")
+        BUILDER.comment("Which addon tabs get absorbed into Create, and where.")
                 .push("absorption");
     }
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> FORCE_INCLUDE = BUILDER
-            .comment("Tab IDs (e.g. \"somemod:main\") to ALWAYS absorb under the Create tab,",
-                    "even if the owning mod doesn't declare a dependency on Create.")
+            .comment("Tab IDs to always absorb under Create, even without a Create dependency.")
             .defineListAllowEmpty("forceInclude", List.of(), () -> "somemod:main", Config::isValidTabId);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> FORCE_EXCLUDE = BUILDER
-            .comment("Tab IDs (e.g. \"somemod:main\") to NEVER absorb; they keep their own standalone tab.")
+            .comment("Tab IDs to never absorb; they keep their own standalone tab.")
             .defineListAllowEmpty("forceExclude", List.of(), () -> "somemod:main", Config::isValidTabId);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> ROUTES = BUILDER
-            .comment("Fold specific tabs into a chosen Create PARENT tab instead of the main \"create:base\".",
-                    "Format: \"<addonTabId> > <parentTabId>\", e.g. \"somemod:deco > create:palettes\".",
-                    "Create's parent tabs are \"create:base\" (Create) and \"create:palettes\" (Create: Palettes).")
+            .comment("Fold a tab into a chosen Create parent tab. Format: \"<addonTabId> > <parentTabId>\",",
+                    "e.g. \"somemod:deco > create:palettes\".")
             .defineListAllowEmpty("routes", List.of(), () -> "somemod:deco > create:palettes", Config::isValidRoute);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> EXTRA_MAIN_SECTIONS = BUILDER
-            .comment("Tabs explicitly promoted to \"hub\" status (can have other tabs folded into them as",
-                    "sub-sections) even though nothing routes into them yet, e.g. \"somemod:main\". A hub keeps",
-                    "its own standalone tab button and items, same as create:base/create:palettes today.",
-                    "Managed live via shift+\"+\" in the creative menu.")
+            .comment("Tabs promoted to hub status (can have others folded into them) even without routes",
+                    "pointing at them yet. Managed via shift+\"+\" in the creative menu.")
             .defineListAllowEmpty("extraMainSections", List.of(), () -> "somemod:main", Config::isValidTabId);
 
     static {
         BUILDER.pop();
-        BUILDER.comment("Banner, contrast-box, and title-text styling for the sections.")
+        BUILDER.comment("Banner, box, and title-text styling for sections.")
                 .push("appearance");
     }
 
     public static final ModConfigSpec.IntValue DEFAULT_BANNER_COLOR = BUILDER
-            .comment("Default section banner colour as an ARGB integer (default opaque dark grey, HSV value 15%).")
+            .comment("Default section banner colour (ARGB int).")
             .defineInRange("defaultBannerColor", 0xFF262626, Integer.MIN_VALUE, Integer.MAX_VALUE);
 
+    public static final ModConfigSpec.ConfigValue<String> DEFAULT_BANNER_GRADIENT = BUILDER
+            .comment("Optional gradient for the default banner, as \"<secondHex>|<DIRECTION>|<STYLE>\"",
+                    "(DIRECTION: VERTICAL/HORIZONTAL/DIAGONAL_UP/DIAGONAL_DOWN, STYLE: SMOOTH/DITHER_2X2/",
+                    "DITHER_4X4/DITHER_8X8/DITHER_TRICOLOR). Empty (default) means a flat colour.")
+            .define("defaultBannerGradient", "");
+
     public static final ModConfigSpec.ConfigValue<List<? extends String>> SECTION_COLORS = BUILDER
-            .comment("Per-section banner colours, keyed by tab ID (a stop-gap until artwork exists).",
-                    "Format: \"<tabId> = <hex>\", e.g. \"create:palettes = #6A8F3C\" or \"somemod:main = 0xFF335577\".",
-                    "Accepts #RRGGBB, #AARRGGBB, or a 0x-prefixed hex value; 6-digit values are treated as opaque.",
-                    "Changes apply the next time you join a world.")
-            .defineListAllowEmpty("sectionColors", List.of(), () -> "somemod:main = #4A4A4A", Config::isValidSectionColor);
+            .comment("Per-section banner colours, keyed by tab ID. Format: \"<tabId> = <hex>\", optionally a",
+                    "gradient: \"<tabId> = <hex1>|<hex2>|<DIRECTION>|<STYLE>\". Accepts #RRGGBB, #AARRGGBB, or",
+                    "0x-prefixed hex.")
+            .defineListAllowEmpty("sectionColors", List.of(), () -> "somemod:main = #4A4A4A", Config::isValidBannerColorSpecEntry);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> BANNERS = BUILDER
-            .comment("Per-section banner IMAGES, keyed by tab ID. An image overrides the colour for that section.",
-                    "Format: \"<tabId> = <ref>\" where <ref> is \"res:<namespace>:<path>\" for a bundled/gallery",
-                    "texture, \"file:<name>.png\" for a PNG in config/createaddonorganizer/banners/, or",
-                    "\"remote:<name>.png\" for a banner fetched from the online gallery.",
+            .comment("Per-section banner IMAGES, keyed by tab ID; overrides the colour. Format:",
+                    "\"<tabId> = <ref>\" (\"res:ns:path\", \"file:name.png\", or \"remote:name.png\").",
                     "Managed by the in-game banner editor; banners are 160x17.")
             .defineListAllowEmpty("banners", List.of(),
                     () -> "somemod:main = res:createaddonorganizer:textures/banner/create1.png", Config::isValidBanner);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> ANIMATED_BANNERS = BUILDER
-            .comment("Declares a banner texture as animated (a vertical strip of 17px frames), keyed by the",
-                    "resolved texture id -- not the section id, so a shared/uploaded texture animates",
-                    "everywhere it's used. Format: \"<textureId> = <frametime>\" (frametime in game ticks).",
-                    "Bundled (res:) textures don't need this; they're auto-detected from a standard .mcmeta.",
+            .comment("Marks a banner texture as animated (vertical strip of 17px frames), keyed by texture id.",
+                    "Format: \"<textureId> = <frametime>\" (ticks). Bundled textures auto-detect via .mcmeta.",
                     "Managed by the in-game banner editor.")
             .defineListAllowEmpty("animatedBanners", List.of(),
                     () -> "createaddonorganizer:custom_banner/example = 2", Config::isValidAnimatedBanner);
 
     public static final ModConfigSpec.BooleanValue SHOW_ALL_BANNERS = BUILDER
-            .comment("Some mods have a curated set of banners assigned to them; by default their picker only",
-                    "offers those. Turn this on to ignore that curation and see the full banner gallery",
-                    "everywhere, same as an unassigned mod.")
+            .comment("Ignore curated banner pools and always show the full gallery.")
             .define("showAllBanners", false);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> EXTRA_BANNER_POOL = BUILDER
-            .comment("Banners YOU'VE uploaded for a curated (pool-restricted) mod's tab, keyed by tab ID.",
-                    "Added to that tab's curated pool automatically so your own upload shows up in its",
-                    "gallery even while the curated pool is restricting everything else. Format:",
-                    "\"<tabId> = <ref>\"; a tab can have several rows. Managed by the in-game banner editor.")
+            .comment("Your own uploads added to a curated tab's banner pool, keyed by tab ID. Format:",
+                    "\"<tabId> = <ref>\". Managed by the in-game banner editor.")
             .defineListAllowEmpty("extraBannerPool", List.of(),
                     () -> "somemod:main = file:example.png", Config::isValidBanner);
 
     public static final ModConfigSpec.BooleanValue FETCH_ONLINE_BANNERS = BUILDER
-            .comment("If true, checks GitHub once per game launch (on a background thread) for new or",
-                    "updated community banners and credits. Never blocks loading, never retried mid-session.",
-                    "Disable for fully offline/airgapped use.")
+            .comment("Check GitHub once per launch for new/updated community banners and credits. Disable",
+                    "for offline use.")
             .define("fetchOnlineBanners", true);
 
     public static final ModConfigSpec.ConfigValue<String> BANNER_MANIFEST_URL = BUILDER
-            .comment("URL of the remote banner manifest (JSON). Only used when fetchOnlineBanners is true.",
-                    "Override to test against a local server or a fork's repository.")
+            .comment("URL of the remote banner manifest (JSON). Used only when fetchOnlineBanners is true.")
             .define("bannerManifestUrl",
                     "https://cdn.jsdelivr.net/gh/SockyWocky7/createaddonorganizer@master/banners/index.json",
                     Config::isValidUrl);
 
+    public static final ModConfigSpec.ConfigValue<String> BANNER_POOLS_MANIFEST_URL = BUILDER
+            .comment("URL of the remote banner-pool manifest (JSON) -- curated banners per tab. Used only",
+                    "when fetchOnlineBanners is true; edit the file at this URL to update pools without a",
+                    "mod update.")
+            .define("bannerPoolsManifestUrl",
+                    "https://cdn.jsdelivr.net/gh/SockyWocky7/createaddonorganizer@master/banners/pools.json",
+                    Config::isValidUrl);
+
     public static final ModConfigSpec.BooleanValue FETCH_ONLINE_BOX_TEXTURES = BUILDER
-            .comment("If true, checks GitHub once per game launch (on a background thread) for new or",
-                    "updated community text-banner (contrast box) textures. Never blocks loading, never",
-                    "retried mid-session. Disable for fully offline/airgapped use.")
+            .comment("Check GitHub once per launch for new/updated community text-banner textures. Disable",
+                    "for offline use.")
             .define("fetchOnlineBoxTextures", true);
 
     public static final ModConfigSpec.ConfigValue<String> BOX_MANIFEST_URL = BUILDER
-            .comment("URL of the remote text-banner manifest (JSON). Only used when fetchOnlineBoxTextures is",
-                    "true. Override to test against a local server or a fork's repository.")
+            .comment("URL of the remote text-banner manifest (JSON). Used only when fetchOnlineBoxTextures",
+                    "is true.")
             .define("boxManifestUrl",
                     "https://cdn.jsdelivr.net/gh/SockyWocky7/createaddonorganizer@master/text_banners/index.json",
                     Config::isValidUrl);
@@ -149,109 +150,150 @@ public class Config {
             .define("tintedTextBox", true);
 
     public static final ModConfigSpec.IntValue DEFAULT_BOX_COLOR = BUILDER
-            .comment("Default tinted-box colour as an ARGB integer (default translucent black).")
+            .comment("Default tinted-box colour (ARGB int).")
             .defineInRange("defaultBoxColor", 0x64000000, Integer.MIN_VALUE, Integer.MAX_VALUE);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> BOX_COLORS = BUILDER
-            .comment("Per-section tinted-box colours, keyed by tab ID. Same format as sectionColors;",
-                    "the alpha channel controls opacity, e.g. \"create:palettes = #AA39231C\".")
+            .comment("Per-section tinted-box colours, keyed by tab ID. Same format as sectionColors; alpha",
+                    "controls opacity.")
             .defineListAllowEmpty("boxColors", List.of(), () -> "somemod:main = #64000000", Config::isValidSectionColor);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> BOX_TEXTURES = BUILDER
-            .comment("Per-section contrast-box IMAGES, keyed by tab ID (drawn behind the title text,",
-                    "3-sliced horizontally -- fixed-width end caps plus a tiled middle -- so any width fits).",
-                    "An image overrides the box colour for that section. Format: \"<tabId> = <ref>\" where",
-                    "<ref> is \"res:<namespace>:<path>\" for a bundled texture or \"file:<name>.png\" for a PNG",
-                    "in config/createaddonorganizer/text_banners/. No remote gallery or animation support",
-                    "for box textures (unlike banners). Height is fixed at 14px; any width.",
+            .comment("Per-section contrast-box IMAGES, keyed by tab ID (3-sliced horizontally so any width",
+                    "fits). Format: \"<tabId> = <ref>\" (\"res:ns:path\" or \"file:name.png\"). Fixed 14px height.",
                     "Managed by the in-game box editor.")
             .defineListAllowEmpty("boxTextures", List.of(),
                     () -> "somemod:main = res:createaddonorganizer:textures/box/example.png", Config::isValidBanner);
 
     public static final ModConfigSpec.IntValue DEFAULT_TEXT_COLOR = BUILDER
-            .comment("Default section title text colour as an ARGB integer (default opaque white).")
+            .comment("Default section title text colour (ARGB int).")
             .defineInRange("defaultTextColor", 0xFFFFFFFF, Integer.MIN_VALUE, Integer.MAX_VALUE);
 
+    public static final ModConfigSpec.ConfigValue<String> DEFAULT_TEXT_GRADIENT = BUILDER
+            .comment("Optional gradient for the default text colour, as \"<secondHex>|<DIRECTION>\".",
+                    "Text gradients always render smooth.")
+            .define("defaultTextGradient", "");
+
     public static final ModConfigSpec.ConfigValue<List<? extends String>> TEXT_COLORS = BUILDER
-            .comment("Per-section title text colours, keyed by tab ID. Same format as sectionColors.")
-            .defineListAllowEmpty("textColors", List.of(), () -> "somemod:main = #FFFFFFFF", Config::isValidSectionColor);
+            .comment("Per-section title text colours, keyed by tab ID. Same format as sectionColors, minus",
+                    "the STYLE token.")
+            .defineListAllowEmpty("textColors", List.of(), () -> "somemod:main = #FFFFFFFF", Config::isValidTextColorSpecEntry);
 
     public static final ModConfigSpec.BooleanValue TWO_TONE_TEXT = BUILDER
-            .comment("Shade section title text two-tone (primary colour on top, secondary on the bottom",
-                    "of each glyph) instead of a single flat colour.")
+            .comment("Shade title text two-tone: primary colour on top, secondary on bottom of each glyph.")
             .define("twoToneText", true);
 
     public static final ModConfigSpec.IntValue DEFAULT_TEXT_SECONDARY_COLOR = BUILDER
-            .comment("Default secondary text colour as an ARGB integer (default opaque light grey,",
-                    "HSV 0/0/80%).")
+            .comment("Default secondary text colour (ARGB int).")
             .defineInRange("defaultTextSecondaryColor", 0xFFCCCCCC, Integer.MIN_VALUE, Integer.MAX_VALUE);
 
+    public static final ModConfigSpec.ConfigValue<String> DEFAULT_TEXT_SECONDARY_GRADIENT = BUILDER
+            .comment("Optional gradient for the default secondary text colour, as \"<secondHex>|<DIRECTION>\".")
+            .define("defaultTextSecondaryGradient", "");
+
     public static final ModConfigSpec.ConfigValue<List<? extends String>> TEXT_SECONDARY_COLORS = BUILDER
-            .comment("Per-section SECONDARY title text colour overrides, keyed by tab ID. Only used while",
-                    "twoToneText is on; falls back to defaultTextSecondaryColor when unset for a section.")
-            .defineListAllowEmpty("textSecondaryColors", List.of(), () -> "somemod:main = #FFCEA05A", Config::isValidSectionColor);
+            .comment("Per-section secondary text colour overrides, keyed by tab ID. Only used while",
+                    "twoToneText is on.")
+            .defineListAllowEmpty("textSecondaryColors", List.of(), () -> "somemod:main = #FFCEA05A", Config::isValidTextColorSpecEntry);
 
     public static final ModConfigSpec.DoubleValue DEFAULT_TWO_TONE_SPLIT = BUILDER
-            .comment("Default vertical split point of two-tone title text, as a fraction of the glyph height",
-                    "measured from the top (0.0 = fully secondary colour, 1.0 = fully primary colour).",
-                    "Default 0.56 matches the original fixed split.")
-            .defineInRange("defaultTwoToneSplit", 5.0 / 9.0, 0.0, 1.0);
+            .comment("Default vertical split of two-tone text, as a fraction of glyph height from the top",
+                    "(0 = secondary, 1 = primary).")
+            .defineInRange("defaultTwoToneSplit", 0.55, 0.0, 1.0);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> TEXT_SPLITS = BUILDER
-            .comment("Per-section two-tone text split overrides, keyed by tab ID. Only used while twoToneText",
-                    "is on; falls back to defaultTwoToneSplit when unset for a section. Format:",
-                    "\"<tabId> = <fraction>\".")
+            .comment("Per-section two-tone split overrides, keyed by tab ID. Format: \"<tabId> = <fraction>\".",
+                    "Only used while twoToneText is on.")
             .defineListAllowEmpty("textSplits", List.of(), () -> "somemod:main = 0.56", Config::isValidSectionFraction);
 
+    public static final ModConfigSpec.DoubleValue DEFAULT_SCROLL_CUTOFF = BUILDER
+            .comment("Fraction of the banner's title width text must exceed before scrolling. 1.0 (default)",
+                    "scrolls only on true overflow; lower values make shorter titles scroll too.")
+            .defineInRange("defaultScrollCutoff", 1.0, 0.0, 1.0);
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> SCROLL_CUTOFFS = BUILDER
+            .comment("Per-section scroll cutoff overrides, keyed by tab ID. Managed from the banner editor's",
+                    "Primary text panel.")
+            .defineListAllowEmpty("scrollCutoffs", List.of(), () -> "somemod:main = 1.0", Config::isValidSectionFraction);
+
+    public static final ModConfigSpec.BooleanValue TITLE_TEXT_SHADOW = BUILDER
+            .comment("Draw title text with the vanilla drop shadow by default. Per-section overrides take",
+                    "precedence.")
+            .define("titleTextShadow", true);
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> TITLE_TEXT_SHADOW_SECTIONS = BUILDER
+            .comment("Per-section drop-shadow on/off overrides, keyed by tab ID. Format: \"<tabId> = true\"",
+                    "or \"false\". Managed from the banner editor's Shadow panel.")
+            .defineListAllowEmpty("titleTextShadowSections", List.of(), () -> "somemod:main = true", Config::isValidSectionBoolean);
+
+    public static final ModConfigSpec.IntValue DEFAULT_TEXT_OUTLINE_COLOR = BUILDER
+            .comment("Default title text outline colour (ARGB int). Starting colour in the banner editor's",
+                    "Outline panel.")
+            .defineInRange("defaultTextOutlineColor", 0xFF000000, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+    public static final ModConfigSpec.ConfigValue<String> DEFAULT_TEXT_OUTLINE_GRADIENT = BUILDER
+            .comment("Optional gradient for the default outline colour, as \"<secondHex>|<DIRECTION>\".")
+            .define("defaultTextOutlineGradient", "");
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> TEXT_OUTLINE_COLORS = BUILDER
+            .comment("Per-section text outline colours, keyed by tab ID. An entry's presence enables the",
+                    "outline for that section. Managed from the banner editor's Outline panel.")
+            .defineListAllowEmpty("textOutlineColors", List.of(), () -> "somemod:main = #FF000000", Config::isValidTextColorSpecEntry);
+
+    public static final ModConfigSpec.IntValue DEFAULT_TEXT_SHADOW_COLOR = BUILDER
+            .comment("Default custom drop-shadow colour (ARGB int), used once a section's shadow is",
+                    "unlinked from its text colour.")
+            .defineInRange("defaultTextShadowColor", 0xFF000000, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> TEXT_SHADOW_COLORS = BUILDER
+            .comment("Per-section custom drop-shadow colours, keyed by tab ID. An entry unlinks that shadow",
+                    "from the primary text colour. Only drawn while titleTextShadow is on.")
+            .defineListAllowEmpty("textShadowColors", List.of(), () -> "somemod:main = #FF000000", Config::isValidSectionColor);
+
     public static final ModConfigSpec.ConfigValue<List<? extends String>> HIGHLIGHT_COLORS = BUILDER
-            .comment("Optional accent colour for MAIN tabs only (create:base, create:palettes, and any promoted",
-                    "hub), keyed by tab ID. Purely a config-screen convenience: tints that tab's row band and",
-                    "its sub-section group line in the section list, so you can tell addon groups apart at a",
-                    "glance. Has no effect on the actual in-game banner. Format: \"<tabId> = <hex>\".")
+            .comment("Accent colour for MAIN tabs only, keyed by tab ID. Config-screen only -- tints that",
+                    "tab's row in the section list, no effect in-game.")
             .defineListAllowEmpty("highlightColors", List.of(), () -> "create:base = #4A90D9", Config::isValidSectionColor);
 
     public static final ModConfigSpec.BooleanValue RAINBOW_MODE = BUILDER
-            .comment("When on, banner/text/secondary-text colours are computed live from each section's",
-                    "position in the current tab order (a smooth red-to-violet gradient top to bottom)",
-                    "instead of read from sectionColors/textColors/textSecondaryColors. Recomputes on the fly",
-                    "as tabs are reordered or added, so it never goes stale. Turned on by the \"Rainbow\" preset.")
+            .comment("Compute banner/text colours live as a red-to-violet gradient by tab position, instead",
+                    "of using the manual colour lists. Enabled by the Rainbow preset.")
             .define("rainbowMode", false);
 
     static {
         BUILDER.pop();
-        BUILDER.comment("Custom section ordering and renames.")
+        BUILDER.comment("Custom section order and names.")
                 .push("organization");
     }
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> SECTION_ORDER = BUILDER
-            .comment("Manual drag order of sections within each parent tab (tab IDs). Unlisted sections",
-                    "(e.g. newly installed addons) are appended alphabetically by name.")
+            .comment("Manual drag order of sections within each parent tab. Unlisted sections are appended",
+                    "alphabetically.")
             .defineListAllowEmpty("sectionOrder", List.of(), () -> "somemod:main", Config::isValidTabId);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> SECTION_NAMES = BUILDER
-            .comment("Custom display names for sections, keyed by tab ID. Overrides the addon's own name.",
-                    "Format: \"<tabId> = <custom name>\". Managed by ctrl+click-to-rename in the section list.")
+            .comment("Custom display names, keyed by tab ID. Format: \"<tabId> = <name>\". Managed by",
+                    "ctrl+click-to-rename in the section list.")
             .defineListAllowEmpty("sectionNames", List.of(), () -> "somemod:main = My Custom Name", Config::isValidSectionName);
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> COLLAPSED_SECTIONS = BUILDER
-            .comment("Section tab IDs currently collapsed via Fancy Tab Sections' collapse toggle (only",
-                    "relevant while showCollapseToggle is on). Remembered across tab rebuilds and restarts.")
+            .comment("Sections currently collapsed via the collapse toggle. Only relevant while",
+                    "showCollapseToggle is on.")
             .defineListAllowEmpty("collapsedSections", List.of(), () -> "somemod:main", Config::isValidTabId);
 
     static {
         BUILDER.pop();
-        BUILDER.comment("The left-side section-index jump list on the creative screen.")
+        BUILDER.comment("The section-index jump list for tabs Fancy Tab Sections doesn't cover",
+                        "(Simulated-family addon tabs).")
                 .push("interface");
     }
 
     public enum IndexPanelStyle { VANILLA, DARK, REFURBISHED, BACKPORT }
 
     public static final ModConfigSpec.EnumValue<IndexPanelStyle> INDEX_PANEL_STYLE = BUILDER
-            .comment("Visual style of the section-index panel:",
-                    "VANILLA - light-grey raised panel matching the vanilla inventory (default).",
-                    "DARK - the original flat dark panel.",
-                    "REFURBISHED - beveled side tabs in the style of MrCrayfish's Refurbished Furniture.",
-                    "BACKPORT - compact textured side panel in the style of Vanilla Backport.")
+            .comment("Visual style of the section-index panel on Simulated-family tabs: VANILLA (light",
+                    "raised panel, default), DARK (flat dark panel), REFURBISHED (beveled side tabs),",
+                    "BACKPORT (compact textured panel).")
             .defineEnum("indexPanelStyle", IndexPanelStyle.VANILLA);
 
     static {
@@ -259,35 +301,40 @@ public class Config {
     }
 
     public static final ModConfigSpec.BooleanValue EDITOR_HINT_SEEN = BUILDER
-            .comment("Set automatically once the banner editor's click-the-preview hint has been acknowledged",
-                    "(by clicking any part of the preview). Turn off to show the pulsing hint again.")
+            .comment("Set once the banner editor's preview hint is dismissed. Turn off to show it again.")
             .define("editorHintSeen", false);
 
     public static final ModConfigSpec.BooleanValue BANNER_EDITOR_PREVIEW_TOP = BUILDER
-            .comment("Where the clickable banner preview sits in the banner editor:",
-                    "true - directly under the title, with the edit controls below it.",
-                    "false - at the bottom of the screen, just above the OK/Cancel buttons.")
+            .comment("Where the banner preview sits in the editor: true = under the title, false = above",
+                    "the OK/Cancel buttons.")
             .define("bannerEditorPreviewTop", false);
 
     public static final ModConfigSpec.IntValue GRADIENT_CELL_SIZE = BUILDER
-            .comment("Chunkiness (in GUI pixels) of the pixelated hue/saturation/value picker gradients in the",
-                    "banner editor. 1 is a smooth gradient; higher values look blockier/more pixel-art.")
+            .comment("Pixel chunkiness of the hue/saturation/value gradients in the banner editor. 1 =",
+                    "smooth, higher = blockier.")
             .defineInRange("gradientCellSize", 5, 1, 20);
 
     static final ModConfigSpec SPEC = BUILDER.build();
 
     public static void resetAllToDefault() {
-        applyAppearance(DEFAULT_BANNER_COLOR.getDefault(), SECTION_COLORS.getDefault(), BANNERS.getDefault(),
-                ANIMATED_BANNERS.getDefault(), TINTED_TEXT_BOX.getDefault(), DEFAULT_BOX_COLOR.getDefault(),
-                BOX_COLORS.getDefault(), BOX_TEXTURES.getDefault(), DEFAULT_TEXT_COLOR.getDefault(), TEXT_COLORS.getDefault(),
-                TWO_TONE_TEXT.getDefault(), DEFAULT_TEXT_SECONDARY_COLOR.getDefault(), TEXT_SECONDARY_COLORS.getDefault(),
+        applyAppearance(DEFAULT_BANNER_COLOR.getDefault(), DEFAULT_BANNER_GRADIENT.getDefault(), SECTION_COLORS.getDefault(),
+                BANNERS.getDefault(), ANIMATED_BANNERS.getDefault(), TINTED_TEXT_BOX.getDefault(), DEFAULT_BOX_COLOR.getDefault(),
+                BOX_COLORS.getDefault(), BOX_TEXTURES.getDefault(), DEFAULT_TEXT_COLOR.getDefault(), DEFAULT_TEXT_GRADIENT.getDefault(),
+                TEXT_COLORS.getDefault(), TWO_TONE_TEXT.getDefault(), DEFAULT_TEXT_SECONDARY_COLOR.getDefault(),
+                DEFAULT_TEXT_SECONDARY_GRADIENT.getDefault(), TEXT_SECONDARY_COLORS.getDefault(),
                 HIGHLIGHT_COLORS.getDefault(), SHOW_ALL_BANNERS.getDefault(), EXTRA_BANNER_POOL.getDefault());
         applyOrganization(SECTION_ORDER.getDefault(), SECTION_NAMES.getDefault());
         applyAbsorption(FORCE_INCLUDE.getDefault(), FORCE_EXCLUDE.getDefault(), ROUTES.getDefault(),
                 EXTRA_MAIN_SECTIONS.getDefault());
         setRainbowMode(RAINBOW_MODE.getDefault());
         COLLAPSED_SECTIONS.set(COLLAPSED_SECTIONS.getDefault());
-        SPEC.save();
+        DEFAULT_TEXT_OUTLINE_COLOR.set(DEFAULT_TEXT_OUTLINE_COLOR.getDefault());
+        DEFAULT_TEXT_OUTLINE_GRADIENT.set(DEFAULT_TEXT_OUTLINE_GRADIENT.getDefault());
+        TEXT_OUTLINE_COLORS.set(TEXT_OUTLINE_COLORS.getDefault());
+        applyAppearanceExtras(TITLE_TEXT_SHADOW.getDefault(), TITLE_TEXT_SHADOW_SECTIONS.getDefault(),
+                DEFAULT_TEXT_SHADOW_COLOR.getDefault(), TEXT_SHADOW_COLORS.getDefault(),
+                DEFAULT_SCROLL_CUTOFF.getDefault(), SCROLL_CUTOFFS.getDefault(),
+                DEFAULT_TWO_TONE_SPLIT.getDefault(), TEXT_SPLITS.getDefault());
     }
 
     public static void applyOrganization(List<? extends String> sectionOrder, List<? extends String> sectionNames) {
@@ -305,12 +352,14 @@ public class Config {
         SPEC.save();
     }
 
-    public static void applyAppearance(int bannerColor, List<? extends String> sectionColors, List<? extends String> banners,
-            List<? extends String> animatedBanners, boolean tintedBox, int boxColor, List<? extends String> boxColors,
-            List<? extends String> boxTextures, int textColor, List<? extends String> textColors, boolean twoTone,
-            int textSecondaryColor, List<? extends String> textSecondaryColors, List<? extends String> highlightColors,
+    public static void applyAppearance(int bannerColor, String bannerGradient, List<? extends String> sectionColors,
+            List<? extends String> banners, List<? extends String> animatedBanners, boolean tintedBox, int boxColor,
+            List<? extends String> boxColors, List<? extends String> boxTextures, int textColor, String textGradient,
+            List<? extends String> textColors, boolean twoTone, int textSecondaryColor, String textSecondaryGradient,
+            List<? extends String> textSecondaryColors, List<? extends String> highlightColors,
             boolean showAllBanners, List<? extends String> extraBannerPool) {
         DEFAULT_BANNER_COLOR.set(bannerColor);
+        DEFAULT_BANNER_GRADIENT.set(bannerGradient);
         SECTION_COLORS.set(sectionColors);
         BANNERS.set(banners);
         ANIMATED_BANNERS.set(animatedBanners);
@@ -319,13 +368,38 @@ public class Config {
         BOX_COLORS.set(boxColors);
         BOX_TEXTURES.set(boxTextures);
         DEFAULT_TEXT_COLOR.set(textColor);
+        DEFAULT_TEXT_GRADIENT.set(textGradient);
         TEXT_COLORS.set(textColors);
         TWO_TONE_TEXT.set(twoTone);
         DEFAULT_TEXT_SECONDARY_COLOR.set(textSecondaryColor);
+        DEFAULT_TEXT_SECONDARY_GRADIENT.set(textSecondaryGradient);
         TEXT_SECONDARY_COLORS.set(textSecondaryColors);
         HIGHLIGHT_COLORS.set(highlightColors);
         SHOW_ALL_BANNERS.set(showAllBanners);
         EXTRA_BANNER_POOL.set(extraBannerPool);
+        SPEC.save();
+    }
+
+    public static void applyTextOutlineDefaults(int textOutlineColor, String textOutlineGradient,
+            List<? extends String> textOutlineColors) {
+        DEFAULT_TEXT_OUTLINE_COLOR.set(textOutlineColor);
+        DEFAULT_TEXT_OUTLINE_GRADIENT.set(textOutlineGradient);
+        TEXT_OUTLINE_COLORS.set(textOutlineColors);
+        SPEC.save();
+    }
+
+    public static void applyAppearanceExtras(boolean titleTextShadow, List<? extends String> titleTextShadowSections,
+            int textShadowColor, List<? extends String> textShadowColors,
+            double scrollCutoff, List<? extends String> scrollCutoffs,
+            double twoToneSplit, List<? extends String> textSplits) {
+        TITLE_TEXT_SHADOW.set(titleTextShadow);
+        TITLE_TEXT_SHADOW_SECTIONS.set(titleTextShadowSections);
+        DEFAULT_TEXT_SHADOW_COLOR.set(textShadowColor);
+        TEXT_SHADOW_COLORS.set(textShadowColors);
+        DEFAULT_SCROLL_CUTOFF.set(scrollCutoff);
+        SCROLL_CUTOFFS.set(scrollCutoffs);
+        DEFAULT_TWO_TONE_SPLIT.set(twoToneSplit);
+        TEXT_SPLITS.set(textSplits);
         SPEC.save();
     }
 
@@ -581,22 +655,26 @@ public class Config {
         SPEC.save();
     }
 
-    public static int bannerColorFor(ResourceLocation id) {
+    public static ColorSpec bannerColorFor(ResourceLocation id) {
         if (rainbowMode()) {
             List<ResourceLocation> ordered = rainbowOrder();
-            return rainbowBannerColor(ordered.indexOf(id), ordered.size());
+            return ColorSpec.solid(rainbowBannerColor(ordered.indexOf(id), ordered.size()));
         }
-        Integer override = lookupColor(SECTION_COLORS.get(), id);
-        return override != null ? override : DEFAULT_BANNER_COLOR.get();
+        ColorSpec override = lookupColorSpec(SECTION_COLORS.get(), id, true);
+        return override != null ? override : defaultBannerSpec();
+    }
+
+    public static ColorSpec defaultBannerSpec() {
+        return composeDefaultSpec(DEFAULT_BANNER_COLOR.get(), DEFAULT_BANNER_GRADIENT.get(), true);
     }
 
     public static boolean hasColorOverride(ResourceLocation id) {
-        return lookupColor(SECTION_COLORS.get(), id) != null;
+        return lookupColorSpec(SECTION_COLORS.get(), id, true) != null;
     }
 
-    public static void setSectionColor(ResourceLocation id, int argb) {
+    public static void setSectionColor(ResourceLocation id, ColorSpec spec) {
         List<String> updated = withoutEntry(SECTION_COLORS.get(), id);
-        updated.add(id + " = " + formatHex(argb));
+        updated.add(id + " = " + formatColorSpec(spec, true));
         SECTION_COLORS.set(updated);
         SPEC.save();
     }
@@ -626,6 +704,10 @@ public class Config {
 
     public static boolean showCollapseToggle() {
         return SHOW_COLLAPSE_TOGGLE.get();
+    }
+
+    public static boolean stickySectionBanners() {
+        return STICKY_SECTION_BANNERS.get();
     }
 
     public static boolean isSectionCollapsed(ResourceLocation id) {
@@ -698,18 +780,22 @@ public class Config {
         SPEC.save();
     }
 
-    public static int textColorFor(ResourceLocation id) {
+    public static ColorSpec textColorFor(ResourceLocation id) {
         if (rainbowMode()) {
             List<ResourceLocation> ordered = rainbowOrder();
-            return rainbowTextColor(ordered.indexOf(id), ordered.size());
+            return ColorSpec.solid(rainbowTextColor(ordered.indexOf(id), ordered.size()));
         }
-        Integer override = lookupColor(TEXT_COLORS.get(), id);
-        return override != null ? override : DEFAULT_TEXT_COLOR.get();
+        ColorSpec override = lookupColorSpec(TEXT_COLORS.get(), id, false);
+        return override != null ? override : defaultTextSpec();
     }
 
-    public static void setTextColor(ResourceLocation id, int argb) {
+    public static ColorSpec defaultTextSpec() {
+        return composeDefaultSpec(DEFAULT_TEXT_COLOR.get(), DEFAULT_TEXT_GRADIENT.get(), false);
+    }
+
+    public static void setTextColor(ResourceLocation id, ColorSpec spec) {
         List<String> updated = withoutEntry(TEXT_COLORS.get(), id);
-        updated.add(id + " = " + formatHex(argb));
+        updated.add(id + " = " + formatColorSpec(spec, false));
         TEXT_COLORS.set(updated);
         SPEC.save();
     }
@@ -740,16 +826,20 @@ public class Config {
         return GRADIENT_CELL_SIZE.get();
     }
 
-    public static Integer textSecondaryColorFor(ResourceLocation id) {
+    public static ColorSpec textSecondaryColorFor(ResourceLocation id) {
         if (!TWO_TONE_TEXT.get()) {
             return null;
         }
         if (rainbowMode()) {
             List<ResourceLocation> ordered = rainbowOrder();
-            return rainbowTextSecondaryColor(ordered.indexOf(id), ordered.size());
+            return ColorSpec.solid(rainbowTextSecondaryColor(ordered.indexOf(id), ordered.size()));
         }
-        Integer override = lookupColor(TEXT_SECONDARY_COLORS.get(), id);
-        return override != null ? override : DEFAULT_TEXT_SECONDARY_COLOR.get();
+        ColorSpec override = lookupColorSpec(TEXT_SECONDARY_COLORS.get(), id, false);
+        return override != null ? override : defaultTextSecondarySpec();
+    }
+
+    public static ColorSpec defaultTextSecondarySpec() {
+        return composeDefaultSpec(DEFAULT_TEXT_SECONDARY_COLOR.get(), DEFAULT_TEXT_SECONDARY_GRADIENT.get(), false);
     }
 
     public static int rainbowBannerColor(int index, int total) {
@@ -791,9 +881,9 @@ public class Config {
         return ordered;
     }
 
-    public static void setTextSecondaryColor(ResourceLocation id, int argb) {
+    public static void setTextSecondaryColor(ResourceLocation id, ColorSpec spec) {
         List<String> updated = withoutEntry(TEXT_SECONDARY_COLORS.get(), id);
-        updated.add(id + " = " + formatHex(argb));
+        updated.add(id + " = " + formatColorSpec(spec, false));
         TEXT_SECONDARY_COLORS.set(updated);
         SPEC.save();
     }
@@ -803,6 +893,60 @@ public class Config {
             return;
         }
         TEXT_SECONDARY_COLORS.set(withoutEntry(TEXT_SECONDARY_COLORS.get(), id));
+        SPEC.save();
+    }
+
+    public static boolean titleTextShadow(ResourceLocation id) {
+        Boolean override = lookupBoolean(TITLE_TEXT_SHADOW_SECTIONS.get(), id);
+        return override != null ? override : TITLE_TEXT_SHADOW.get();
+    }
+
+    public static void setTitleTextShadow(ResourceLocation id, boolean shadow) {
+        List<String> updated = withoutEntry(TITLE_TEXT_SHADOW_SECTIONS.get(), id);
+        updated.add(id + " = " + shadow);
+        TITLE_TEXT_SHADOW_SECTIONS.set(updated);
+        SPEC.save();
+    }
+
+    public static ColorSpec textOutlineColorFor(ResourceLocation id) {
+        return lookupColorSpec(TEXT_OUTLINE_COLORS.get(), id, false);
+    }
+
+    public static ColorSpec defaultTextOutlineSpec() {
+        return composeDefaultSpec(DEFAULT_TEXT_OUTLINE_COLOR.get(), DEFAULT_TEXT_OUTLINE_GRADIENT.get(), false);
+    }
+
+    public static void setTextOutlineColor(ResourceLocation id, ColorSpec spec) {
+        List<String> updated = withoutEntry(TEXT_OUTLINE_COLORS.get(), id);
+        updated.add(id + " = " + formatColorSpec(spec, false));
+        TEXT_OUTLINE_COLORS.set(updated);
+        SPEC.save();
+    }
+
+    public static void clearTextOutlineColor(ResourceLocation id) {
+        if (textOutlineColorFor(id) == null) {
+            return;
+        }
+        TEXT_OUTLINE_COLORS.set(withoutEntry(TEXT_OUTLINE_COLORS.get(), id));
+        SPEC.save();
+    }
+
+    public static Integer textShadowColorFor(ResourceLocation id) {
+        return lookupColor(TEXT_SHADOW_COLORS.get(), id);
+    }
+
+    public static void setTextShadowColor(ResourceLocation id, int argb) {
+        List<String> updated = withoutEntry(TEXT_SHADOW_COLORS.get(), id);
+        updated.add(id + " = " + formatHex(argb));
+        TEXT_SHADOW_COLORS.set(updated);
+        SPEC.save();
+    }
+
+    public static void clearTextShadowColor(ResourceLocation id) {
+        if (textShadowColorFor(id) == null) {
+            return;
+        }
+        TEXT_SHADOW_COLORS.set(withoutEntry(TEXT_SHADOW_COLORS.get(), id));
         SPEC.save();
     }
 
@@ -823,6 +967,18 @@ public class Config {
             return;
         }
         TEXT_SPLITS.set(withoutEntry(TEXT_SPLITS.get(), id));
+        SPEC.save();
+    }
+
+    public static float scrollCutoffFor(ResourceLocation id) {
+        Float override = lookupFraction(SCROLL_CUTOFFS.get(), id);
+        return override != null ? override : DEFAULT_SCROLL_CUTOFF.get().floatValue();
+    }
+
+    public static void setScrollCutoff(ResourceLocation id, float fraction) {
+        List<String> updated = withoutEntry(SCROLL_CUTOFFS.get(), id);
+        updated.add(id + " = " + fraction);
+        SCROLL_CUTOFFS.set(updated);
         SPEC.save();
     }
 
@@ -860,6 +1016,10 @@ public class Config {
 
     public static String bannerManifestUrl() {
         return BANNER_MANIFEST_URL.get();
+    }
+
+    public static String bannerPoolsManifestUrl() {
+        return BANNER_POOLS_MANIFEST_URL.get();
     }
 
     public static boolean fetchOnlineBoxTextures() {
@@ -1040,6 +1200,34 @@ public class Config {
                 && parseColor(parts[1]) != null;
     }
 
+    private static boolean isValidBannerColorSpecEntry(final Object obj) {
+        return isValidColorSpecEntry(obj, true);
+    }
+
+    private static boolean isValidTextColorSpecEntry(final Object obj) {
+        return isValidColorSpecEntry(obj, false);
+    }
+
+    private static boolean isValidColorSpecEntry(final Object obj, boolean supportsStyle) {
+        if (!(obj instanceof String s)) {
+            return false;
+        }
+        String[] parts = s.split("=", 2);
+        return parts.length == 2
+                && ResourceLocation.tryParse(parts[0].trim()) != null
+                && parseColorSpecEntry(parts[1].trim(), supportsStyle) != null;
+    }
+
+    private static boolean isValidSectionBoolean(final Object obj) {
+        if (!(obj instanceof String s)) {
+            return false;
+        }
+        String[] parts = s.split("=", 2);
+        return parts.length == 2
+                && ResourceLocation.tryParse(parts[0].trim()) != null
+                && ("true".equalsIgnoreCase(parts[1].trim()) || "false".equalsIgnoreCase(parts[1].trim()));
+    }
+
     private static boolean isValidSectionFraction(final Object obj) {
         if (!(obj instanceof String s)) {
             return false;
@@ -1062,6 +1250,81 @@ public class Config {
             String[] parts = entry.split("=", 2);
             if (parts.length == 2 && target.equals(parts[0].trim())) {
                 return parseColor(parts[1]);
+            }
+        }
+        return null;
+    }
+
+    private static ColorSpec lookupColorSpec(List<? extends String> list, ResourceLocation id, boolean supportsStyle) {
+        String target = id.toString();
+        for (String entry : list) {
+            String[] parts = entry.split("=", 2);
+            if (parts.length == 2 && target.equals(parts[0].trim())) {
+                return parseColorSpecEntry(parts[1].trim(), supportsStyle);
+            }
+        }
+        return null;
+    }
+
+    private static ColorSpec composeDefaultSpec(int color1, String gradientSuffix, boolean supportsStyle) {
+        if (gradientSuffix == null || gradientSuffix.isEmpty()) {
+            return ColorSpec.solid(color1);
+        }
+        ColorSpec parsed = parseColorSpecEntry(formatHex(color1) + "|" + gradientSuffix, supportsStyle);
+        return parsed != null ? parsed : ColorSpec.solid(color1);
+    }
+
+    public static String formatColorSpec(ColorSpec spec, boolean includeStyle) {
+        if (!spec.isGradient()) {
+            return formatHex(spec.color1());
+        }
+        String out = formatHex(spec.color1()) + "|" + formatHex(spec.color2()) + "|" + spec.direction().name();
+        if (includeStyle) {
+            out += "|" + spec.style().name();
+        }
+        return out;
+    }
+
+    public static ColorSpec parseColorSpecEntry(String raw, boolean supportsStyle) {
+        String[] parts = raw.split("\\|");
+        if (parts.length == 1) {
+            Integer color1 = parseColor(parts[0]);
+            return color1 != null ? ColorSpec.solid(color1) : null;
+        }
+        if (parts.length != 3 && parts.length != 4) {
+            return null;
+        }
+        if (parts.length == 4 && !supportsStyle) {
+            return null;
+        }
+        Integer color1 = parseColor(parts[0]);
+        Integer color2 = parseColor(parts[1]);
+        if (color1 == null || color2 == null) {
+            return null;
+        }
+        ColorSpec.Direction direction;
+        try {
+            direction = ColorSpec.Direction.valueOf(parts[2].trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        ColorSpec.Style style = ColorSpec.Style.SMOOTH;
+        if (parts.length == 4) {
+            try {
+                style = ColorSpec.Style.valueOf(parts[3].trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }
+        return new ColorSpec(color1, color2, direction, style);
+    }
+
+    private static Boolean lookupBoolean(List<? extends String> list, ResourceLocation id) {
+        String target = id.toString();
+        for (String entry : list) {
+            String[] parts = entry.split("=", 2);
+            if (parts.length == 2 && target.equals(parts[0].trim())) {
+                return Boolean.parseBoolean(parts[1].trim());
             }
         }
         return null;

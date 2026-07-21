@@ -1,9 +1,25 @@
 [
   {
-    "name": "Debug",
-    "color": "#FFAA00",
+    "name": "SockyWocky",
+    "color": "#c369ff",
     "textures": [
-      { "file": "debug_test.png", "v": 2 }
+      { "file": "canvas_default.png", "v": 1 },
+      { "file": "canvas_red.png", "v": 1 },
+      { "file": "canvas_brown.png", "v": 1 },
+      { "file": "canvas_orange.png", "v": 1 },
+      { "file": "canvas_yellow.png", "v": 1 },
+      { "file": "canvas_green.png", "v": 1 },
+      { "file": "canvas_lime.png", "v": 1 },
+      { "file": "canvas_cyan.png", "v": 1 },
+      { "file": "canvas_light_blue.png", "v": 1 },
+      { "file": "canvas_blue.png", "v": 1 },
+      { "file": "canvas_purple.png", "v": 1 },
+      { "file": "canvas_magenta.png", "v": 1 },
+      { "file": "canvas_pink.png", "v": 1 },
+      { "file": "canvas_white.png", "v": 1 },
+      { "file": "canvas_light_gray.png", "v": 1 },
+      { "file": "canvas_gray.png", "v": 1 },
+      { "file": "canvas_black.png", "v": 1 }
     ]
   },
   {

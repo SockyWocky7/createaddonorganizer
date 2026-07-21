@@ -38,10 +38,16 @@ public final class Presets {
 
     private Presets() {}
 
-    public record PresetData(String name, int bannerColor, List<String> sectionColors, List<String> banners,
+    public record PresetData(String name, int bannerColor, String bannerGradient, List<String> sectionColors, List<String> banners,
             List<String> animatedBanners, boolean tintedBox, int boxColor, List<String> boxColors,
-            List<String> boxTextures, int textColor, List<String> textColors, boolean twoTone, int textSecondaryColor,
-            List<String> textSecondaryColors, List<String> sectionOrder, List<String> sectionNames,
+            List<String> boxTextures, int textColor, String textGradient, List<String> textColors, boolean twoTone,
+            int textSecondaryColor, String textSecondaryGradient, List<String> textSecondaryColors,
+            Integer textOutlineColor, String textOutlineGradient, List<String> textOutlineColors,
+            Boolean titleTextShadow, List<String> titleTextShadowSections,
+            Integer textShadowColor, List<String> textShadowColors,
+            Double scrollCutoff, List<String> scrollCutoffs,
+            Double twoToneSplit, List<String> textSplits,
+            List<String> sectionOrder, List<String> sectionNames,
             List<String> forceInclude, List<String> forceExclude, List<String> routes, List<String> extraMainSections,
             List<String> highlightColors, boolean showAllBanners, List<String> extraBannerPool, boolean rainbow,
             boolean images) {
@@ -49,6 +55,10 @@ public final class Presets {
 
     private static List<String> orEmpty(List<String> list) {
         return Objects.requireNonNullElse(list, List.of());
+    }
+
+    private static String orEmptyStr(String s) {
+        return Objects.requireNonNullElse(s, "");
     }
 
     public record PresetRef(String ref, String name) {
@@ -59,11 +69,19 @@ public final class Presets {
 
     public static PresetData captureCurrent(String name) {
         return new PresetData(name,
-                Config.DEFAULT_BANNER_COLOR.get(), List.copyOf(Config.SECTION_COLORS.get()), List.copyOf(Config.BANNERS.get()),
+                Config.DEFAULT_BANNER_COLOR.get(), Config.DEFAULT_BANNER_GRADIENT.get(),
+                List.copyOf(Config.SECTION_COLORS.get()), List.copyOf(Config.BANNERS.get()),
                 List.copyOf(Config.ANIMATED_BANNERS.get()), Config.tintedTextBox(), Config.DEFAULT_BOX_COLOR.get(),
                 List.copyOf(Config.BOX_COLORS.get()), List.copyOf(Config.BOX_TEXTURES.get()),
-                Config.DEFAULT_TEXT_COLOR.get(), List.copyOf(Config.TEXT_COLORS.get()),
-                Config.TWO_TONE_TEXT.get(), Config.DEFAULT_TEXT_SECONDARY_COLOR.get(), List.copyOf(Config.TEXT_SECONDARY_COLORS.get()),
+                Config.DEFAULT_TEXT_COLOR.get(), Config.DEFAULT_TEXT_GRADIENT.get(), List.copyOf(Config.TEXT_COLORS.get()),
+                Config.TWO_TONE_TEXT.get(), Config.DEFAULT_TEXT_SECONDARY_COLOR.get(), Config.DEFAULT_TEXT_SECONDARY_GRADIENT.get(),
+                List.copyOf(Config.TEXT_SECONDARY_COLORS.get()),
+                Config.DEFAULT_TEXT_OUTLINE_COLOR.get(), Config.DEFAULT_TEXT_OUTLINE_GRADIENT.get(),
+                List.copyOf(Config.TEXT_OUTLINE_COLORS.get()),
+                Config.TITLE_TEXT_SHADOW.get(), List.copyOf(Config.TITLE_TEXT_SHADOW_SECTIONS.get()),
+                Config.DEFAULT_TEXT_SHADOW_COLOR.get(), List.copyOf(Config.TEXT_SHADOW_COLORS.get()),
+                Config.DEFAULT_SCROLL_CUTOFF.get(), List.copyOf(Config.SCROLL_CUTOFFS.get()),
+                Config.DEFAULT_TWO_TONE_SPLIT.get(), List.copyOf(Config.TEXT_SPLITS.get()),
                 List.copyOf(Config.SECTION_ORDER.get()), List.copyOf(Config.SECTION_NAMES.get()),
                 List.copyOf(Config.FORCE_INCLUDE.get()), List.copyOf(Config.FORCE_EXCLUDE.get()),
                 List.copyOf(Config.ROUTES.get()), List.copyOf(Config.EXTRA_MAIN_SECTIONS.get()),
@@ -76,10 +94,23 @@ public final class Presets {
             applyTopPoolImages();
             return;
         }
-        Config.applyAppearance(data.bannerColor(), data.sectionColors(), data.banners(), data.animatedBanners(),
-                data.tintedBox(), data.boxColor(), data.boxColors(), orEmpty(data.boxTextures()), data.textColor(),
-                data.textColors(), data.twoTone(), data.textSecondaryColor(), data.textSecondaryColors(),
+        Config.applyAppearance(data.bannerColor(), orEmptyStr(data.bannerGradient()), data.sectionColors(), data.banners(),
+                data.animatedBanners(), data.tintedBox(), data.boxColor(), data.boxColors(), orEmpty(data.boxTextures()),
+                data.textColor(), orEmptyStr(data.textGradient()), data.textColors(), data.twoTone(), data.textSecondaryColor(),
+                orEmptyStr(data.textSecondaryGradient()), data.textSecondaryColors(),
                 orEmpty(data.highlightColors()), data.showAllBanners(), orEmpty(data.extraBannerPool()));
+        Config.applyTextOutlineDefaults(
+                data.textOutlineColor() != null ? data.textOutlineColor() : Config.DEFAULT_TEXT_OUTLINE_COLOR.getDefault(),
+                orEmptyStr(data.textOutlineGradient()), orEmpty(data.textOutlineColors()));
+        Config.applyAppearanceExtras(
+                data.titleTextShadow() != null ? data.titleTextShadow() : Config.TITLE_TEXT_SHADOW.getDefault(),
+                orEmpty(data.titleTextShadowSections()),
+                data.textShadowColor() != null ? data.textShadowColor() : Config.DEFAULT_TEXT_SHADOW_COLOR.getDefault(),
+                orEmpty(data.textShadowColors()),
+                data.scrollCutoff() != null ? data.scrollCutoff() : Config.DEFAULT_SCROLL_CUTOFF.getDefault(),
+                orEmpty(data.scrollCutoffs()),
+                data.twoToneSplit() != null ? data.twoToneSplit() : Config.DEFAULT_TWO_TONE_SPLIT.getDefault(),
+                orEmpty(data.textSplits()));
         if (!data.rainbow()) {
             Config.applyOrganization(orEmpty(data.sectionOrder()), orEmpty(data.sectionNames()));
             Config.applyAbsorption(orEmpty(data.forceInclude()), orEmpty(data.forceExclude()),
@@ -88,6 +119,8 @@ public final class Presets {
         Config.setRainbowMode(data.rainbow());
     }
 
+    private static final String FALLBACK_IMAGE_REF = "res:createaddonorganizer:textures/banner/basic.png";
+
     private static void applyTopPoolImages() {
         Map<ResourceLocation, String> assignments = new HashMap<>();
         for (SectionCatalog.Entry entry : SectionCatalog.colorables()) {
@@ -95,9 +128,7 @@ public final class Presets {
                 continue;
             }
             List<String> pool = BannerPools.poolFor(entry.id());
-            if (!pool.isEmpty()) {
-                assignments.put(entry.id(), pool.get(0));
-            }
+            assignments.put(entry.id(), !pool.isEmpty() ? pool.get(0) : FALLBACK_IMAGE_REF);
         }
         Config.setSectionBanners(assignments);
     }
@@ -239,10 +270,16 @@ public final class Presets {
         if (data == null) {
             return;
         }
-        PresetData renamed = new PresetData(newName, data.bannerColor(), data.sectionColors(), data.banners(),
+        PresetData renamed = new PresetData(newName, data.bannerColor(), data.bannerGradient(), data.sectionColors(), data.banners(),
                 data.animatedBanners(), data.tintedBox(), data.boxColor(), data.boxColors(), data.boxTextures(),
-                data.textColor(), data.textColors(), data.twoTone(), data.textSecondaryColor(),
-                data.textSecondaryColors(), data.sectionOrder(), data.sectionNames(),
+                data.textColor(), data.textGradient(), data.textColors(), data.twoTone(), data.textSecondaryColor(),
+                data.textSecondaryGradient(), data.textSecondaryColors(),
+                data.textOutlineColor(), data.textOutlineGradient(), data.textOutlineColors(),
+                data.titleTextShadow(), data.titleTextShadowSections(),
+                data.textShadowColor(), data.textShadowColors(),
+                data.scrollCutoff(), data.scrollCutoffs(),
+                data.twoToneSplit(), data.textSplits(),
+                data.sectionOrder(), data.sectionNames(),
                 data.forceInclude(), data.forceExclude(), data.routes(), data.extraMainSections(),
                 data.highlightColors(), data.showAllBanners(), data.extraBannerPool(), data.rainbow(), data.images());
         try {

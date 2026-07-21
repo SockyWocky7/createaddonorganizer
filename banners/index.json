@@ -19,6 +19,14 @@
     ]
   },
   {
+    "name": "Dolphin + Arthur",
+    "color": "#44DEA5",
+    "banners": [
+      { "file": "bnb2.png", "v": 1 },
+      { "file": "aquaticambitions1.png", "v": 1 }
+    ]
+  },
+  {
     "name": "The Tophatted Dolphin",
     "color": "#30FF4B",
     "banners": [
@@ -67,14 +75,6 @@
       { "file": "mired1.png", "v": 1 },
       { "file": "cardanshafts1.png", "v": 1 },
       { "file": "spawn.png", "v": 1 }
-    ]
-  },
-  {
-    "name": "Dolphin + Arthur",
-    "color": "#44DEA5",
-    "banners": [
-      { "file": "bnb2.png", "v": 1 },
-      { "file": "aquaticambitions1.png", "v": 1 }
     ]
   },
   {

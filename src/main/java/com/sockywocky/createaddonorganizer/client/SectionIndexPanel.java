@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import net.mcexpanded.fancytabsections.FTSInternal;
-import net.mcexpanded.fancytabsections.FancyTabSections;
-import net.mcexpanded.fancytabsections.Section.Section;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
@@ -52,7 +49,6 @@ public final class SectionIndexPanel {
     private static ResourceLocation lastTabId = null;
     private static boolean simulatedTab = false;
     private static int lastSimVersion = -1;
-    private static List<Section<?>> ftsLive = null;
 
     private static List<ResourceLocation> ids = null;
     private static List<Component> titles = List.of();
@@ -190,19 +186,7 @@ public final class SectionIndexPanel {
     }
 
     private static Integer rowOf(ResourceLocation id) {
-        if (simulatedTab) {
-            return SimulatedHub.rowOf(id);
-        }
-        if (ftsLive == null) {
-            return null;
-        }
-        for (Section<?> section : ftsLive) {
-            if (section.id().equals(id)) {
-                int row = FTSInternal.getRowForSection(section);
-                return row == -1 ? null : row;
-            }
-        }
-        return null;
+        return simulatedTab ? SimulatedHub.rowOf(id) : null;
     }
 
     private static int selectedIndex(CreativeModeInventoryScreen screen) {
@@ -264,12 +248,11 @@ public final class SectionIndexPanel {
     }
 
     public static boolean active() {
+        // FTS 6.0 renders its own section-index panel for tabs it registers; this panel now
+        // only covers Simulated-hub tabs, which aren't FTS sections.
         ResourceLocation tabId = selectedTabId();
         if (tabId == null) {
             return false;
-        }
-        if (FancyTabSections.REGISTERED_TABS.get(tabId) != null) {
-            return true;
         }
         return SimulatedSupport.isLoaded() && SimulatedSupport.isMainTab(tabId);
     }
@@ -287,74 +270,44 @@ public final class SectionIndexPanel {
         ResourceLocation tabId = selectedTabId();
         boolean simTab = tabId != null && SimulatedSupport.isLoaded() && SimulatedSupport.isMainTab(tabId);
 
-        if (simTab) {
-            int version = SimulatedHub.stateVersion();
-            boolean tabChanged = !Objects.equals(tabId, lastTabId);
-            if (!tabChanged && simulatedTab && version == lastSimVersion) {
-                return;
-            }
-            simulatedTab = true;
-            ftsLive = null;
-            lastTabId = tabId;
-            lastSimVersion = version;
-            if (tabChanged) {
+        if (!simTab) {
+            // FTS 6.0 owns the index panel for its own registered tabs now; nothing for us to show.
+            simulatedTab = false;
+            lastSimVersion = -1;
+            if (!Objects.equals(tabId, lastTabId)) {
+                lastTabId = tabId;
                 cancelAnimation();
                 panelScroll = 0f;
             }
-            List<SimulatedHub.IndexEntry> entries = SimulatedHub.allSectionsInOrder();
-            List<ResourceLocation> newIds = new ArrayList<>(entries.size());
-            List<Component> newTitles = new ArrayList<>(entries.size());
-            List<ItemStack> newIcons = new ArrayList<>(entries.size());
-            for (SimulatedHub.IndexEntry entry : entries) {
-                newIds.add(entry.id());
-                newTitles.add(entry.title());
-                newIcons.add(SimulatedHub.iconFor(entry.id(), entry.owned()));
-            }
-            ids = newIds;
-            titles = newTitles;
-            icons = newIcons;
-            return;
-        }
-
-        simulatedTab = false;
-        lastSimVersion = -1;
-        List<Section<?>> live = tabId == null ? null : FancyTabSections.REGISTERED_TABS.get(tabId);
-        if (live == ftsLive && Objects.equals(tabId, lastTabId)) {
-            return;
-        }
-        boolean tabChanged = !Objects.equals(tabId, lastTabId);
-        lastTabId = tabId;
-        ftsLive = live;
-        if (tabChanged) {
-            cancelAnimation();
-            panelScroll = 0f;
-        }
-        if (live == null) {
             ids = null;
             titles = List.of();
             icons = List.of();
             return;
         }
-        List<ResourceLocation> newIds = new ArrayList<>(live.size());
-        List<Component> newTitles = new ArrayList<>(live.size());
-        List<ItemStack> newIcons = new ArrayList<>(live.size());
-        for (Section<?> section : live) {
-            newIds.add(section.id());
-            newTitles.add(CaoSection.titleOf(section));
-            newIcons.add(iconFor(section));
+
+        int version = SimulatedHub.stateVersion();
+        boolean tabChanged = !Objects.equals(tabId, lastTabId);
+        if (!tabChanged && simulatedTab && version == lastSimVersion) {
+            return;
+        }
+        simulatedTab = true;
+        lastTabId = tabId;
+        lastSimVersion = version;
+        if (tabChanged) {
+            cancelAnimation();
+            panelScroll = 0f;
+        }
+        List<SimulatedHub.IndexEntry> entries = SimulatedHub.allSectionsInOrder();
+        List<ResourceLocation> newIds = new ArrayList<>(entries.size());
+        List<Component> newTitles = new ArrayList<>(entries.size());
+        List<ItemStack> newIcons = new ArrayList<>(entries.size());
+        for (SimulatedHub.IndexEntry entry : entries) {
+            newIds.add(entry.id());
+            newTitles.add(entry.title());
+            newIcons.add(SimulatedHub.iconFor(entry.id(), entry.owned()));
         }
         ids = newIds;
         titles = newTitles;
         icons = newIcons;
-    }
-
-    private static ItemStack iconFor(Section<?> section) {
-        CreativeModeTab tab = BuiltInRegistries.CREATIVE_MODE_TAB.get(section.id());
-        ItemStack tabIcon = SafeIcon.of(tab);
-        if (!tabIcon.isEmpty()) {
-            return tabIcon;
-        }
-        List<ItemStack> stacks = section.items().getStacks();
-        return stacks.isEmpty() ? ItemStack.EMPTY : stacks.get(0);
     }
 }

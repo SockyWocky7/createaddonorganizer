@@ -97,7 +97,7 @@ dependencies {
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     jarJar(implementation('maven.modrinth:K0NYarUG')) {
         version {
-            strictly '5.0-NEOFORGE-1.21.1'
+            strictly '6.0-NEOFORGE-1.21.1'
         }
     }
 }

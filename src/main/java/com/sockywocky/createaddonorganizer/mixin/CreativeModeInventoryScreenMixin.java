@@ -1,8 +1,10 @@
 package com.sockywocky.createaddonorganizer.mixin;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -13,16 +15,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.sockywocky.createaddonorganizer.AbsorbedTabs;
 import com.sockywocky.createaddonorganizer.client.CollapseSync;
 import com.sockywocky.createaddonorganizer.client.SectionIndexPanel;
+import com.sockywocky.createaddonorganizer.createaddonorganizer;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.CreativeModeTabRegistry;
 
 @Mixin(CreativeModeInventoryScreen.class)
-public class CreativeModeInventoryScreenMixin {
+public abstract class CreativeModeInventoryScreenMixin {
+
+    @Shadow
+    private static CreativeModeTab selectedTab;
+
+    @Shadow
+    protected abstract void refreshCurrentTabContents(Collection<ItemStack> items);
 
     @Redirect(
             method = "init",
@@ -55,6 +65,11 @@ public class CreativeModeInventoryScreenMixin {
             float partialTick, CallbackInfo ci) {
         SectionIndexPanel.render((CreativeModeInventoryScreen) (Object) this, guiGraphics, mouseX, mouseY);
         CollapseSync.tick();
+
+        ResourceLocation tabId = selectedTab == null ? null : BuiltInRegistries.CREATIVE_MODE_TAB.getKey(selectedTab);
+        if (createaddonorganizer.reconcileOnTabView(tabId)) {
+            this.refreshCurrentTabContents(selectedTab.getDisplayItems());
+        }
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)

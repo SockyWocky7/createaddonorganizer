@@ -51,6 +51,19 @@ public final class ColorUtil {
         return new float[] {h, s, max};
     }
 
+    public static int lerpArgb(float delta, int from, int to) {
+        float d = Math.max(0f, Math.min(1f, delta));
+        int a = lerpChannel(d, (from >> 24) & 0xFF, (to >> 24) & 0xFF);
+        int r = lerpChannel(d, (from >> 16) & 0xFF, (to >> 16) & 0xFF);
+        int g = lerpChannel(d, (from >> 8) & 0xFF, (to >> 8) & 0xFF);
+        int b = lerpChannel(d, from & 0xFF, to & 0xFF);
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    private static int lerpChannel(float delta, int from, int to) {
+        return Math.round(from + (to - from) * delta);
+    }
+
     public static int brighten(int argb, float factor) {
         int a = (argb >> 24) & 0xFF;
         int r = (argb >> 16) & 0xFF;
