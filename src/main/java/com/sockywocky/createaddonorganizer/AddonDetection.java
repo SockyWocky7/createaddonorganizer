@@ -25,6 +25,9 @@ public final class AddonDetection {
         if (CREATE.equals(ns)) {
             return "Create-owned tab";
         }
+        if (SimulatedSupport.isLoaded() && SimulatedSupport.isMainTab(tabId)) {
+            return "Simulated's own main tab, never an absorb target";
+        }
         if (Config.isForceExcluded(tabId)) {
             return "force-excluded in config";
         }

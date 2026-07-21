@@ -104,6 +104,8 @@ public class createaddonorganizer {
     }
 
     public static boolean organize(CreativeModeTab.ItemDisplayParameters params) {
+        Set<ResourceLocation> previousManagedParents = new HashSet<>(MANAGED_PARENTS);
+
         MANAGED_PARENTS.clear();
         MANAGED_PARENTS.add(CREATE_BASE);
         MANAGED_PARENTS.addAll(Config.allRouteTargets());
@@ -113,6 +115,16 @@ public class createaddonorganizer {
             MANAGED_PARENTS.add(SimulatedSupport.MAIN_TAB);
         }
         MANAGED_PARENTS.removeIf(Config::isForceExcluded);
+
+        Set<ResourceLocation> touchedParents = new HashSet<>(previousManagedParents);
+        touchedParents.addAll(MANAGED_PARENTS);
+        for (ResourceLocation parent : touchedParents) {
+            if (SimulatedSupport.isMainTab(parent)) {
+                SimulatedHub.retractAll();
+            } else {
+                dropParentSections(parent);
+            }
+        }
 
         PENDING.clear();
         OWN_SECTIONS.clear();
@@ -130,14 +142,6 @@ public class createaddonorganizer {
         if (listenerInvocationsThisPass == 0) {
             LOGGER.warn("[CAO] collection pass captured nothing; will retry");
             return false;
-        }
-
-        for (ResourceLocation parent : MANAGED_PARENTS) {
-            if (SimulatedSupport.isMainTab(parent)) {
-                SimulatedHub.retractAll();
-            } else {
-                dropParentSections(parent);
-            }
         }
 
         int addonCount = 0;
@@ -173,7 +177,7 @@ public class createaddonorganizer {
                 MANAGED_PARENTS.size(), addonCount, AbsorbedTabs.IDS);
         logSkipDiagnostics();
 
-        rebuildTabs(MANAGED_PARENTS, params);
+        rebuildTabs(touchedParents, params);
         reconcilePrunedItems(params);
         refreshSearchTrees(params);
         resetCreativeScrollIfOpen();
@@ -379,6 +383,7 @@ public class createaddonorganizer {
                 }
             }
         }
+        rebuildTabs(dropped, params);
         MANAGED_PARENTS.addAll(stillWanted);
         for (ResourceLocation parent : stillWanted) {
             if (SimulatedSupport.isMainTab(parent)) {

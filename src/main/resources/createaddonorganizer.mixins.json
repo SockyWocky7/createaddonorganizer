@@ -10,7 +10,8 @@
     "CreativeModeInventoryScreenAccessor",
     "ItemPickerMenuAccessor",
     "AbstractContainerScreenMixin",
-    "CreativeModeTabBuildContentsGuardMixin"
+    "CreativeModeTabBuildContentsGuardMixin",
+    "IndexPanelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

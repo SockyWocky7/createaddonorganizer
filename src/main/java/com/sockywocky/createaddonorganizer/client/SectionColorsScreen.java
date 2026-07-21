@@ -525,29 +525,44 @@ public class SectionColorsScreen extends Screen {
         return ids;
     }
 
-    private int previewBannerColor(ResourceLocation id) {
+    private ColorSpec previewBannerColor(ResourceLocation id) {
         if (!Config.rainbowMode()) {
             return Config.bannerColorFor(id);
         }
         List<ResourceLocation> order = currentRainbowOrder();
-        return Config.rainbowBannerColor(order.indexOf(id), order.size());
+        return ColorSpec.solid(Config.rainbowBannerColor(order.indexOf(id), order.size()));
     }
 
-    private int previewTextColor(ResourceLocation id) {
+    private ColorSpec previewTextColor(ResourceLocation id) {
         if (!Config.rainbowMode()) {
             return Config.textColorFor(id);
         }
         List<ResourceLocation> order = currentRainbowOrder();
-        return Config.rainbowTextColor(order.indexOf(id), order.size());
+        return ColorSpec.solid(Config.rainbowTextColor(order.indexOf(id), order.size()));
     }
 
-    private Integer previewTextSecondaryColor(ResourceLocation id) {
-        Integer normal = Config.textSecondaryColorFor(id);
+    private ColorSpec previewTextSecondaryColor(ResourceLocation id) {
+        ColorSpec normal = Config.textSecondaryColorFor(id);
         if (normal == null || !Config.rainbowMode()) {
             return normal;
         }
         List<ResourceLocation> order = currentRainbowOrder();
-        return Config.rainbowTextSecondaryColor(order.indexOf(id), order.size());
+        return ColorSpec.solid(Config.rainbowTextSecondaryColor(order.indexOf(id), order.size()));
+    }
+
+    private static ColorSpec opaqueSpec(ColorSpec spec) {
+        if (!spec.isGradient()) {
+            return ColorSpec.solid(0xFF000000 | (spec.color1() & 0x00FFFFFF));
+        }
+        return new ColorSpec(0xFF000000 | (spec.color1() & 0x00FFFFFF), 0xFF000000 | (spec.color2() & 0x00FFFFFF),
+                spec.direction(), spec.style());
+    }
+
+    private static ColorSpec mulAlphaSpec(ColorSpec spec, float factor) {
+        if (!spec.isGradient()) {
+            return ColorSpec.solid(mulAlpha(spec.color1(), factor));
+        }
+        return new ColorSpec(mulAlpha(spec.color1(), factor), mulAlpha(spec.color2(), factor), spec.direction(), spec.style());
     }
 
     private void renderSelectionPanel(GuiGraphics g, float fade) {
@@ -574,22 +589,25 @@ public class SectionColorsScreen extends Screen {
             BannerTextures.blitCropped(g, tex, x, y, w, h, texHeight);
             g.setColor(1f, 1f, 1f, 1f);
         } else {
-            int argb = 0xFF000000 | (previewBannerColor(selectedEntry.id()) & 0x00FFFFFF);
-            g.fill(x, y, x + w, y + h, mulAlpha(argb, fade));
-            g.fill(x, y, x + w, y + 1, mulAlpha(ColorUtil.brighten(argb, 0.4f), fade));
+            ColorSpec bannerSpec = opaqueSpec(previewBannerColor(selectedEntry.id()));
+            BannerFill.draw(g, x, y, x + w, y + h, mulAlphaSpec(bannerSpec, fade));
+            g.fill(x, y, x + w, y + 1, mulAlpha(ColorUtil.brighten(bannerSpec.color1(), 0.4f), fade));
         }
 
         String full = selectedEntry.name().getString();
         String clipped = font.width(full) <= w - 8 ? full : font.plainSubstrByWidth(full, w - 8);
         int textY = y + (h - 8) / 2 + 1;
-        int primary = mulAlpha(previewTextColor(selectedEntry.id()), fade);
-        Integer secondary = previewTextSecondaryColor(selectedEntry.id());
-        if (secondary != null) {
-            TwoToneText.draw(g, font, Component.literal(clipped), x + 4, textY, primary, mulAlpha(secondary, fade),
-                    Config.twoToneSplitFor(selectedEntry.id()));
-        } else {
-            g.drawString(font, clipped, x + 4, textY, primary);
-        }
+        ColorSpec primary = mulAlphaSpec(previewTextColor(selectedEntry.id()), fade);
+        ColorSpec secondary = previewTextSecondaryColor(selectedEntry.id());
+        boolean shadowOn = Config.titleTextShadow(selectedEntry.id());
+        Integer shadowOverride = shadowOn ? Config.textShadowColorFor(selectedEntry.id()) : null;
+        boolean vanillaShadow = shadowOn && shadowOverride == null;
+        ColorSpec outline = Config.textOutlineColorFor(selectedEntry.id());
+        TwoToneText.draw(g, font, Component.literal(clipped), x + 4, textY, x + w - 4, primary,
+                secondary != null ? mulAlphaSpec(secondary, fade) : null,
+                Config.twoToneSplitFor(selectedEntry.id()), vanillaShadow,
+                shadowOverride != null ? mulAlpha(shadowOverride, fade) : 0,
+                outline != null ? mulAlphaSpec(outline, fade) : null);
 
         Component context;
         if (selectedEntry.parent()) {
@@ -889,8 +907,8 @@ public class SectionColorsScreen extends Screen {
             if (entry.readOnly()) {
                 continue;
             }
-            LiveColors.apply(entry.id(), Config.DEFAULT_BANNER_COLOR.get());
-            LiveColors.applyTextColor(entry.id(), Config.DEFAULT_TEXT_COLOR.get());
+            LiveColors.apply(entry.id(), ColorSpec.solid(Config.DEFAULT_BANNER_COLOR.get()));
+            LiveColors.applyTextColor(entry.id(), ColorSpec.solid(Config.DEFAULT_TEXT_COLOR.get()));
             LiveColors.applyTitle(entry.id(), entry.name());
         }
 
@@ -1500,10 +1518,10 @@ public class SectionColorsScreen extends Screen {
                     int swatch = 16;
                     int sy = top + (rowHeight - swatch) / 2;
                     int sx = contentLeft + (previewW - swatch) / 2;
-                    int argb = 0xFF000000 | (previewBannerColor(data.id()) & 0x00FFFFFF);
+                    ColorSpec bannerSpec = opaqueSpec(previewBannerColor(data.id()));
                     g.fill(sx, sy, sx + swatch, sy + swatch, mulAlpha(0xFF000000, alpha));
-                    g.fill(sx + 1, sy + 1, sx + swatch - 1, sy + swatch - 1, mulAlpha(argb, alpha));
-                    previewTooltip = Config.formatHex(previewBannerColor(data.id()));
+                    BannerFill.draw(g, sx + 1, sy + 1, sx + swatch - 1, sy + swatch - 1, mulAlphaSpec(bannerSpec, alpha));
+                    previewTooltip = Config.formatColorSpec(bannerSpec, true);
                     previewX1 = sx;
                     previewY1 = sy;
                     previewX2 = sx + swatch;
@@ -1540,14 +1558,17 @@ public class SectionColorsScreen extends Screen {
                 } else {
                     int nameMaxWidth = actionX - 10 - nameX;
                     Component name = truncatedName(data, nameMaxWidth);
-                    int primary = mulAlpha(previewTextColor(data.id()), alpha);
-                    Integer secondary = previewTextSecondaryColor(data.id());
-                    if (secondary != null) {
-                        TwoToneText.draw(g, font, name, nameX, textY, primary, mulAlpha(secondary, alpha),
-                                Config.twoToneSplitFor(data.id()));
-                    } else {
-                        g.drawString(font, name, nameX, textY, primary);
-                    }
+                    ColorSpec primary = mulAlphaSpec(previewTextColor(data.id()), alpha);
+                    ColorSpec secondary = previewTextSecondaryColor(data.id());
+                    boolean shadowOn = Config.titleTextShadow(data.id());
+                    Integer shadowOverride = shadowOn ? Config.textShadowColorFor(data.id()) : null;
+                    boolean vanillaShadow = shadowOn && shadowOverride == null;
+                    ColorSpec outline = Config.textOutlineColorFor(data.id());
+                    TwoToneText.draw(g, font, name, nameX, textY, nameX + nameMaxWidth, primary,
+                            secondary != null ? mulAlphaSpec(secondary, alpha) : null,
+                            Config.twoToneSplitFor(data.id()), vanillaShadow,
+                            shadowOverride != null ? mulAlpha(shadowOverride, alpha) : 0,
+                            outline != null ? mulAlphaSpec(outline, alpha) : null);
                 }
 
                 if (edit != null) {

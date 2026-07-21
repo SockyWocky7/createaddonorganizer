@@ -39,6 +39,9 @@ public final class BannerPools {
         if (fromSource != null) {
             return fromSource;
         }
+        if (RemoteBannerPools.hasEverCached()) {
+            return RemoteBannerPools.poolsSnapshot();
+        }
         try (InputStream in = Minecraft.getInstance().getResourceManager().open(RESOURCE);
                 Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
             Map<String, List<String>> data = GSON.fromJson(reader, MAP_TYPE);

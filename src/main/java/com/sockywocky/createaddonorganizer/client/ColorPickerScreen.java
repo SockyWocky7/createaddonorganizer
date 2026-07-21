@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleFunction;
 import java.util.function.IntSupplier;
@@ -41,7 +42,7 @@ public class ColorPickerScreen extends Screen {
 
     private enum EditTarget { BANNER, BOX, TEXT, HIGHLIGHT }
 
-    private enum TextTarget { PRIMARY, SECONDARY }
+    private enum TextTarget { PRIMARY, SECONDARY, OUTLINE, SHADOW }
 
     private final Screen parent;
     private final ResourceLocation id;
@@ -52,11 +53,28 @@ public class ColorPickerScreen extends Screen {
     private TextTarget textEditTarget = TextTarget.PRIMARY;
 
     private final Hsva bannerHsva;
+    private final Hsva bannerHsva2;
+    private boolean bannerGradientEnabled;
+    private ColorSpec.Direction bannerDirection = ColorSpec.Direction.VERTICAL;
+    private ColorSpec.Style bannerStyle = ColorSpec.Style.SMOOTH;
     private final Hsva boxHsva;
     private final Hsva textHsva;
+    private final Hsva textHsva2;
+    private boolean textGradientEnabled;
     private Hsva text2Hsva;
+    private final Hsva text2Hsva2;
+    private boolean text2GradientEnabled;
     private boolean twoTone;
     private float twoToneSplit;
+    private final Hsva outlineHsva;
+    private final Hsva outlineHsva2;
+    private boolean outlineGradientEnabled;
+    private boolean outlineEnabled;
+    private boolean editingStop2;
+    private boolean shadowEnabled;
+    private boolean shadowUnlinked;
+    private final Hsva shadowHsva;
+    private float scrollCutoff;
 
     private final boolean isMainTab;
     private final boolean highlightOnly;
@@ -74,10 +92,18 @@ public class ColorPickerScreen extends Screen {
 
     private int previewY;
     private int panelTop;
+    private static final int ROW_H = 20;
+    private static final int FULL_ROW_GAP = 6;
+    private static final int FULL_SQUARE_H = 100;
+    private static final int FULL_BAR_H = 16;
+    private static final int REFERENCE_CONTENT_HEIGHT = 236;
+    private static final float MIN_LAYOUT_SCALE = 0.5f;
+    private int rowGap = FULL_ROW_GAP;
+    private int squareHeight = FULL_SQUARE_H;
+    private int barHeight = FULL_BAR_H;
     private Component hoverBannerTooltip;
     private GalleryList galleryList;
     private BoxGalleryList boxGalleryList;
-    private boolean bannerGalleryEmpty;
 
     private final GradientTexture svSquareTexture = new GradientTexture("sv_square");
     private final GradientTexture hueBarTexture = new GradientTexture("hue_bar");
@@ -88,13 +114,40 @@ public class ColorPickerScreen extends Screen {
         this.id = id;
         this.sectionName = sectionName;
 
-        this.bannerHsva = Hsva.fromArgb(Config.bannerColorFor(id));
+        ColorSpec bannerSpec = Config.bannerColorFor(id);
+        this.bannerHsva = Hsva.fromArgb(bannerSpec.color1());
+        this.bannerGradientEnabled = bannerSpec.isGradient();
+        this.bannerHsva2 = Hsva.fromArgb(bannerSpec.isGradient() ? bannerSpec.color2() : bannerSpec.color1());
+        this.bannerDirection = bannerSpec.direction();
+        this.bannerStyle = bannerSpec.style();
+
         this.boxHsva = Hsva.fromArgb(Config.boxColorFor(id));
-        this.textHsva = Hsva.fromArgb(Config.textColorFor(id));
-        Integer secondary = Config.textSecondaryColorFor(id);
+
+        ColorSpec textSpec = Config.textColorFor(id);
+        this.textHsva = Hsva.fromArgb(textSpec.color1());
+        this.textGradientEnabled = textSpec.isGradient();
+        this.textHsva2 = Hsva.fromArgb(textSpec.isGradient() ? textSpec.color2() : textSpec.color1());
+
+        ColorSpec secondary = Config.textSecondaryColorFor(id);
         this.twoTone = secondary != null;
-        this.text2Hsva = Hsva.fromArgb(secondary != null ? secondary : 0xFFCEA05A);
+        ColorSpec secondarySpec = secondary != null ? secondary : ColorSpec.solid(0xFFCEA05A);
+        this.text2Hsva = Hsva.fromArgb(secondarySpec.color1());
+        this.text2GradientEnabled = secondarySpec.isGradient();
+        this.text2Hsva2 = Hsva.fromArgb(secondarySpec.isGradient() ? secondarySpec.color2() : secondarySpec.color1());
         this.twoToneSplit = Config.twoToneSplitFor(id);
+
+        ColorSpec outline = Config.textOutlineColorFor(id);
+        this.outlineEnabled = outline != null;
+        ColorSpec outlineSpec = outline != null ? outline : Config.defaultTextOutlineSpec();
+        this.outlineHsva = Hsva.fromArgb(outlineSpec.color1());
+        this.outlineGradientEnabled = outlineSpec.isGradient();
+        this.outlineHsva2 = Hsva.fromArgb(outlineSpec.isGradient() ? outlineSpec.color2() : outlineSpec.color1());
+
+        this.shadowEnabled = Config.titleTextShadow(id);
+        Integer shadowColor = Config.textShadowColorFor(id);
+        this.shadowUnlinked = shadowColor != null;
+        this.shadowHsva = Hsva.fromArgb(shadowColor != null ? shadowColor : Config.DEFAULT_TEXT_SHADOW_COLOR.get());
+        this.scrollCutoff = Config.scrollCutoffFor(id);
 
         this.selectedRef = Config.bannerRefFor(id);
         if (selectedRef != null) {
@@ -150,6 +203,8 @@ public class ColorPickerScreen extends Screen {
         boolean previewTop = Config.bannerEditorPreviewTop();
         this.previewY = previewTop ? 32 : this.height - 52;
         this.panelTop = previewTop ? 58 : 34;
+        int contentBottom = previewTop ? buttonsY : Math.min(buttonsY, this.previewY - 8);
+        computeLayoutScale(contentBottom - this.panelTop);
 
         switch (target) {
             case BANNER -> initBannerPanel();
@@ -174,6 +229,7 @@ public class ColorPickerScreen extends Screen {
         if (isMainTab) {
             addRenderableWidget(Button.builder(Component.translatable("createaddonorganizer.colors.highlightButton"), b -> {
                         target = EditTarget.HIGHLIGHT;
+                        editingStop2 = false;
                         rebuildWidgets();
                     })
                     .bounds(this.width - 106, 6, 100, 20).build());
@@ -200,31 +256,40 @@ public class ColorPickerScreen extends Screen {
         }
     }
 
-    private int initTopRow(int x, int y, Component toggleLabel, Runnable onToggle, Runnable onReset) {
-        final int rowW = 200, toggleW = 150, resetW = 46, rowH = 20, gap = 4;
+    private void computeLayoutScale(int available) {
+        float scale = available >= REFERENCE_CONTENT_HEIGHT
+                ? 1.0f
+                : Math.max(MIN_LAYOUT_SCALE, available / (float) REFERENCE_CONTENT_HEIGHT);
+        rowGap = Math.max(2, Math.round(FULL_ROW_GAP * scale));
+        squareHeight = Math.max(50, Math.round(FULL_SQUARE_H * scale));
+        barHeight = Math.max(8, Math.round(FULL_BAR_H * scale));
+    }
+
+    private int initTopRow(int x, int y, Component toggleLabel, Runnable onToggle, Runnable onToggleBackward, Runnable onReset) {
+        final int rowW = 200, toggleW = 150, resetW = 46, gap = 4;
         if (toggleLabel != null) {
-            addRenderableWidget(Button.builder(toggleLabel, b -> onToggle.run())
-                    .bounds(x, y, toggleW, rowH).build());
+            addRenderableWidget(new CycleActionButton(x, y, toggleW, ROW_H, toggleLabel, onToggle, onToggleBackward));
             addRenderableWidget(Button.builder(Component.translatable("createaddonorganizer.colors.resetShort"),
                             b -> onReset.run())
-                    .bounds(x + toggleW + gap, y, resetW, rowH)
+                    .bounds(x + toggleW + gap, y, resetW, ROW_H)
                     .tooltip(Tooltip.create(Component.translatable("createaddonorganizer.colors.reset")))
                     .build());
         } else {
             addRenderableWidget(Button.builder(Component.translatable("createaddonorganizer.colors.reset"),
                             b -> onReset.run())
-                    .bounds(x, y, rowW, rowH).build());
+                    .bounds(x, y, rowW, ROW_H).build());
         }
-        return y + rowH + 6;
+        return y + ROW_H + rowGap;
     }
 
     private void initBannerPanel() {
         int x = this.width / 2 - 100;
-        int contentY = initTopRow(x, panelTop, modeLabel(mode), this::toggleBannerMode, this::resetBanner);
-        bannerGalleryEmpty = false;
+        int contentY = initTopRow(x, panelTop, modeLabel(mode), this::toggleBannerMode, this::toggleBannerMode, this::resetBanner);
 
         if (mode == Mode.COLOR) {
-            addColorControls(x, contentY, bannerHsva);
+            addGradientControls(x, contentY, bannerGradientEnabled, () -> bannerGradientEnabled = !bannerGradientEnabled,
+                    bannerHsva, bannerHsva2,
+                    new BannerGradientExtras(bannerDirection, d -> bannerDirection = d, bannerStyle, s -> bannerStyle = s));
         } else {
             boolean isUpload = selectedRef != null && selectedRef.startsWith("file:");
             addRenderableWidget(Button.builder(Component.translatable("createaddonorganizer.banner.upload"),
@@ -256,15 +321,20 @@ public class ColorPickerScreen extends Screen {
             List<String> pool = BannerPools.poolFor(id);
             boolean hasPool = !pool.isEmpty();
             int checkboxY = canAnimate ? contentY + 48 : contentY + 24;
-            addRenderableWidget(Checkbox.builder(Component.translatable("createaddonorganizer.banner.showAll"), this.font)
-                    .pos(x, checkboxY)
-                    .selected(Config.showAllBanners())
-                    .onValueChange((cb, checked) -> {
-                        Config.setShowAllBanners(checked);
-                        rebuildWidgets();
-                    })
-                    .build());
-            int listTop = checkboxY + 24;
+            int listTop;
+            if (hasPool) {
+                addRenderableWidget(Checkbox.builder(Component.translatable("createaddonorganizer.banner.showAll"), this.font)
+                        .pos(x, checkboxY)
+                        .selected(Config.showAllBanners())
+                        .onValueChange((cb, checked) -> {
+                            Config.setShowAllBanners(checked);
+                            rebuildWidgets();
+                        })
+                        .build());
+                listTop = checkboxY + 24;
+            } else {
+                listTop = checkboxY;
+            }
 
             int listBottom = Config.bannerEditorPreviewTop() ? this.height - 34 : previewY - 8;
             double restoreScroll = galleryList != null ? galleryList.getScrollAmount() : 0;
@@ -272,7 +342,7 @@ public class ColorPickerScreen extends Screen {
             boolean restrict = !DevMode.isUnlocked() && !Config.showAllBanners();
             List<String> refs;
             if (!hasPool) {
-                refs = restrict ? Config.extraPoolFor(id) : BannerTextures.gallery();
+                refs = BannerTextures.gallery();
             } else if (restrict) {
                 refs = new ArrayList<>(pool);
                 for (String extra : Config.extraPoolFor(id)) {
@@ -293,7 +363,6 @@ public class ColorPickerScreen extends Screen {
             }
             addRenderableWidget(galleryList);
             galleryList.setScrollAmount(restoreScroll);
-            bannerGalleryEmpty = galleryList.children().isEmpty();
         }
     }
 
@@ -309,7 +378,7 @@ public class ColorPickerScreen extends Screen {
 
     private void initBoxPanel() {
         int x = this.width / 2 - 100;
-        int contentY = initTopRow(x, panelTop, modeLabel(boxMode), this::toggleBoxMode, this::resetBox);
+        int contentY = initTopRow(x, panelTop, modeLabel(boxMode), this::toggleBoxMode, this::toggleBoxMode, this::resetBox);
 
         if (boxMode == Mode.COLOR) {
             int y = addColorControls(x, contentY, boxHsva);
@@ -350,58 +419,231 @@ public class ColorPickerScreen extends Screen {
 
     private void initTextPanel() {
         int x = this.width / 2 - 100;
-        int contentY = initTopRow(x, panelTop, twoTone ? textTargetLabel() : null,
-                this::toggleTextTarget, this::resetActiveTextColor);
+        int contentY = initTopRow(x, panelTop, textTargetLabel(), this::cycleTextTarget, this::cycleTextTargetBackward, this::resetActiveTextTarget);
 
-        boolean editingSecondary = twoTone && textEditTarget == TextTarget.SECONDARY;
-        Hsva active = editingSecondary ? text2Hsva : textHsva;
-        int y = addColorControls(x, contentY, active);
-
-        addRenderableWidget(Checkbox.builder(Component.translatable("createaddonorganizer.colors.twoTone"), this.font)
-                .pos(x, y + 4)
-                .selected(twoTone)
-                .onValueChange((cb, checked) -> {
-                    twoTone = checked;
-                    textEditTarget = TextTarget.PRIMARY;
-                    rebuildWidgets();
-                })
-                .build());
-        addRenderableWidget(new ChannelSlider(x + 90, y + 3, 110, 20, Component.translatable("createaddonorganizer.colors.twoToneSplit"),
-                twoToneSplit, v -> twoToneSplit = (float) v));
+        switch (textEditTarget) {
+            case PRIMARY -> {
+                int y = addGradientControls(x, contentY, textGradientEnabled, () -> textGradientEnabled = !textGradientEnabled,
+                        textHsva, textHsva2, null);
+                addRenderableWidget(new ChannelSlider(x, y + 4, 200, 20, Component.translatable("createaddonorganizer.colors.scrollCutoff"),
+                        scrollCutoff, v -> scrollCutoff = (float) v));
+            }
+            case SECONDARY -> {
+                int y = addGradientControls(x, contentY, text2GradientEnabled, () -> text2GradientEnabled = !text2GradientEnabled,
+                        text2Hsva, text2Hsva2, null);
+                addRenderableWidget(Checkbox.builder(Component.translatable("createaddonorganizer.colors.twoTone"), this.font)
+                        .pos(x, y + 4)
+                        .selected(twoTone)
+                        .onValueChange((cb, checked) -> twoTone = checked)
+                        .build());
+                addRenderableWidget(new ChannelSlider(x + 90, y + 3, 110, 20, Component.translatable("createaddonorganizer.colors.twoToneSplit"),
+                        twoToneSplit, v -> twoToneSplit = (float) v));
+            }
+            case OUTLINE -> {
+                int y = addGradientControls(x, contentY, outlineGradientEnabled, () -> outlineGradientEnabled = !outlineGradientEnabled,
+                        outlineHsva, outlineHsva2, null);
+                addRenderableWidget(Checkbox.builder(Component.translatable("createaddonorganizer.colors.outline"), this.font)
+                        .pos(x, y + 4)
+                        .selected(outlineEnabled)
+                        .onValueChange((cb, checked) -> outlineEnabled = checked)
+                        .build());
+            }
+            case SHADOW -> {
+                addRenderableWidget(Checkbox.builder(Component.translatable("createaddonorganizer.colors.shadow"), this.font)
+                        .pos(x, contentY)
+                        .selected(shadowEnabled)
+                        .onValueChange((cb, checked) -> shadowEnabled = checked)
+                        .build());
+                addRenderableWidget(Checkbox.builder(Component.translatable("createaddonorganizer.colors.shadowUnlinked"), this.font)
+                        .pos(x, contentY + 24)
+                        .selected(shadowUnlinked)
+                        .onValueChange((cb, checked) -> {
+                            shadowUnlinked = checked;
+                            rebuildWidgets();
+                        })
+                        .build());
+                if (shadowUnlinked) {
+                    addColorControls(x, contentY + 50, shadowHsva);
+                }
+            }
+        }
     }
 
-    private void toggleTextTarget() {
-        textEditTarget = (textEditTarget == TextTarget.PRIMARY) ? TextTarget.SECONDARY : TextTarget.PRIMARY;
+    private void cycleTextTarget() {
+        textEditTarget = switch (textEditTarget) {
+            case PRIMARY -> TextTarget.SECONDARY;
+            case SECONDARY -> TextTarget.OUTLINE;
+            case OUTLINE -> TextTarget.SHADOW;
+            case SHADOW -> TextTarget.PRIMARY;
+        };
+        editingStop2 = false;
         rebuildWidgets();
     }
 
-    private void resetActiveTextColor() {
-        boolean editingSecondary = twoTone && textEditTarget == TextTarget.SECONDARY;
-        Hsva active = editingSecondary ? text2Hsva : textHsva;
-        Hsva def = Hsva.fromArgb(editingSecondary
-                ? Config.DEFAULT_TEXT_SECONDARY_COLOR.get()
-                : Config.DEFAULT_TEXT_COLOR.get());
-        active.h = def.h;
-        active.s = def.s;
-        active.v = def.v;
+    private void cycleTextTargetBackward() {
+        textEditTarget = switch (textEditTarget) {
+            case PRIMARY -> TextTarget.SHADOW;
+            case SECONDARY -> TextTarget.PRIMARY;
+            case OUTLINE -> TextTarget.SECONDARY;
+            case SHADOW -> TextTarget.OUTLINE;
+        };
+        editingStop2 = false;
         rebuildWidgets();
+    }
+
+    private void resetActiveTextTarget() {
+        switch (textEditTarget) {
+            case PRIMARY -> {
+                resetGradientTarget(Config.defaultTextSpec(), textHsva, textHsva2, v -> textGradientEnabled = v);
+                scrollCutoff = Config.DEFAULT_SCROLL_CUTOFF.get().floatValue();
+            }
+            case SECONDARY -> resetGradientTarget(Config.defaultTextSecondarySpec(), text2Hsva, text2Hsva2,
+                    v -> text2GradientEnabled = v);
+            case OUTLINE -> resetGradientTarget(Config.defaultTextOutlineSpec(), outlineHsva, outlineHsva2,
+                    v -> outlineGradientEnabled = v);
+            case SHADOW -> {
+                shadowEnabled = Config.TITLE_TEXT_SHADOW.get();
+                shadowUnlinked = false;
+                resetHsva(shadowHsva, Config.DEFAULT_TEXT_SHADOW_COLOR.get());
+            }
+        }
+        editingStop2 = false;
+        rebuildWidgets();
+    }
+
+    private static void resetGradientTarget(ColorSpec def, Hsva stop1, Hsva stop2, Consumer<Boolean> setGradientEnabled) {
+        resetHsva(stop1, def.color1());
+        resetHsva(stop2, def.isGradient() ? def.color2() : def.color1());
+        setGradientEnabled.accept(def.isGradient());
+    }
+
+    private static void resetHsva(Hsva target, int argb) {
+        Hsva def = Hsva.fromArgb(argb);
+        target.h = def.h;
+        target.s = def.s;
+        target.v = def.v;
     }
 
     private Component textTargetLabel() {
-        String key = textEditTarget == TextTarget.PRIMARY
-                ? "createaddonorganizer.colors.text.primary"
-                : "createaddonorganizer.colors.text.secondary";
+        String key = switch (textEditTarget) {
+            case PRIMARY -> "createaddonorganizer.colors.text.primary";
+            case SECONDARY -> "createaddonorganizer.colors.text.secondary";
+            case OUTLINE -> "createaddonorganizer.colors.text.outline";
+            case SHADOW -> "createaddonorganizer.colors.text.shadow";
+        };
         return Component.translatable("createaddonorganizer.colors.text.editing").copy().append(": ").append(Component.translatable(key));
+    }
+
+    private record BannerGradientExtras(ColorSpec.Direction direction, Consumer<ColorSpec.Direction> setDirection,
+            ColorSpec.Style style, Consumer<ColorSpec.Style> setStyle) {}
+
+    private int addGradientControls(int x, int y, boolean gradientEnabled, Runnable toggleGradient,
+            Hsva stop1, Hsva stop2, BannerGradientExtras extras) {
+        if (!gradientEnabled) {
+            addRenderableWidget(new CycleActionButton(x, y, 200, ROW_H, gradientToggleLabel(false),
+                    () -> { toggleGradient.run(); rebuildWidgets(); },
+                    () -> { toggleGradient.run(); rebuildWidgets(); }));
+            y += ROW_H + rowGap;
+            return addColorControls(x, y, stop1);
+        }
+
+        addRenderableWidget(new CycleActionButton(x, y, 96, ROW_H, gradientToggleLabel(true),
+                () -> { toggleGradient.run(); rebuildWidgets(); },
+                () -> { toggleGradient.run(); rebuildWidgets(); }));
+        addRenderableWidget(new CycleActionButton(x + 104, y, 96, ROW_H, stopLabel(),
+                () -> { editingStop2 = !editingStop2; rebuildWidgets(); },
+                () -> { editingStop2 = !editingStop2; rebuildWidgets(); }));
+        y += ROW_H + rowGap;
+
+        if (extras != null) {
+            ColorSpec.Direction direction = extras.direction();
+            addRenderableWidget(new CycleActionButton(x, y, 96, ROW_H, directionLabel(direction),
+                    () -> { extras.setDirection().accept(nextDirection(direction)); rebuildWidgets(); },
+                    () -> { extras.setDirection().accept(prevDirection(direction)); rebuildWidgets(); }));
+            ColorSpec.Style style = extras.style();
+            addRenderableWidget(new CycleActionButton(x + 104, y, 96, ROW_H, styleLabel(style),
+                    () -> { extras.setStyle().accept(nextStyle(style)); rebuildWidgets(); },
+                    () -> { extras.setStyle().accept(prevStyle(style)); rebuildWidgets(); }));
+            y += ROW_H + rowGap;
+        }
+
+        return addColorControls(x, y, editingStop2 ? stop2 : stop1);
+    }
+
+    private static ColorSpec.Direction nextDirection(ColorSpec.Direction dir) {
+        return switch (dir) {
+            case VERTICAL -> ColorSpec.Direction.HORIZONTAL;
+            case HORIZONTAL -> ColorSpec.Direction.DIAGONAL_UP;
+            case DIAGONAL_UP -> ColorSpec.Direction.DIAGONAL_DOWN;
+            case DIAGONAL_DOWN -> ColorSpec.Direction.VERTICAL;
+        };
+    }
+
+    private static ColorSpec.Direction prevDirection(ColorSpec.Direction dir) {
+        return switch (dir) {
+            case VERTICAL -> ColorSpec.Direction.DIAGONAL_DOWN;
+            case HORIZONTAL -> ColorSpec.Direction.VERTICAL;
+            case DIAGONAL_UP -> ColorSpec.Direction.HORIZONTAL;
+            case DIAGONAL_DOWN -> ColorSpec.Direction.DIAGONAL_UP;
+        };
+    }
+
+    private static ColorSpec.Style nextStyle(ColorSpec.Style style) {
+        return switch (style) {
+            case SMOOTH -> ColorSpec.Style.DITHER_2X2;
+            case DITHER_2X2 -> ColorSpec.Style.DITHER_4X4;
+            case DITHER_4X4 -> ColorSpec.Style.DITHER_8X8;
+            case DITHER_8X8 -> ColorSpec.Style.DITHER_TRICOLOR;
+            case DITHER_TRICOLOR -> ColorSpec.Style.SMOOTH;
+        };
+    }
+
+    private static ColorSpec.Style prevStyle(ColorSpec.Style style) {
+        return switch (style) {
+            case SMOOTH -> ColorSpec.Style.DITHER_TRICOLOR;
+            case DITHER_2X2 -> ColorSpec.Style.SMOOTH;
+            case DITHER_4X4 -> ColorSpec.Style.DITHER_2X2;
+            case DITHER_8X8 -> ColorSpec.Style.DITHER_4X4;
+            case DITHER_TRICOLOR -> ColorSpec.Style.DITHER_8X8;
+        };
+    }
+
+    private Component gradientToggleLabel(boolean enabled) {
+        String key = enabled ? "createaddonorganizer.colors.gradient.gradient" : "createaddonorganizer.colors.gradient.solid";
+        return Component.translatable("createaddonorganizer.colors.gradient.mode").copy().append(": ").append(Component.translatable(key));
+    }
+
+    private Component stopLabel() {
+        String key = editingStop2 ? "createaddonorganizer.colors.gradient.stop2" : "createaddonorganizer.colors.gradient.stop1";
+        return Component.translatable("createaddonorganizer.colors.gradient.editing").copy().append(": ").append(Component.translatable(key));
+    }
+
+    private Component directionLabel(ColorSpec.Direction dir) {
+        String key = switch (dir) {
+            case VERTICAL -> "createaddonorganizer.colors.gradient.direction.vertical";
+            case HORIZONTAL -> "createaddonorganizer.colors.gradient.direction.horizontal";
+            case DIAGONAL_UP -> "createaddonorganizer.colors.gradient.direction.diagonalUp";
+            case DIAGONAL_DOWN -> "createaddonorganizer.colors.gradient.direction.diagonalDown";
+        };
+        return Component.translatable("createaddonorganizer.colors.gradient.direction").copy().append(": ").append(Component.translatable(key));
+    }
+
+    private Component styleLabel(ColorSpec.Style style) {
+        String key = switch (style) {
+            case SMOOTH -> "createaddonorganizer.colors.gradient.style.smooth";
+            case DITHER_2X2 -> "createaddonorganizer.colors.gradient.style.dither2x2";
+            case DITHER_4X4 -> "createaddonorganizer.colors.gradient.style.dither4x4";
+            case DITHER_8X8 -> "createaddonorganizer.colors.gradient.style.dither8x8";
+            case DITHER_TRICOLOR -> "createaddonorganizer.colors.gradient.style.dithertricolor";
+        };
+        return Component.translatable("createaddonorganizer.colors.gradient.style").copy().append(": ").append(Component.translatable(key));
     }
 
     private int addColorControls(int x, int y, Hsva target) {
         int width = 200;
-        int squareHeight = 100;
-        int barHeight = 16;
-        int gap = 6;
 
-        int barY = y + squareHeight + gap;
-        int hexY = barY + barHeight + gap;
+        int barY = y + squareHeight + rowGap;
+        int hexY = barY + barHeight + rowGap;
 
         EditBox hexBox = new EditBox(this.font, x, hexY, width - 50, 20, Component.empty());
         hexBox.setMaxLength(7);
@@ -454,11 +696,17 @@ public class ColorPickerScreen extends Screen {
     }
 
     private void resetBanner() {
-        Hsva def = Hsva.fromArgb(Config.DEFAULT_BANNER_COLOR.get());
-        bannerHsva.h = def.h;
-        bannerHsva.s = def.s;
-        bannerHsva.v = def.v;
-        bannerHsva.a = def.a;
+        ColorSpec def = Config.defaultBannerSpec();
+        Hsva stop1 = Hsva.fromArgb(def.color1());
+        bannerHsva.h = stop1.h;
+        bannerHsva.s = stop1.s;
+        bannerHsva.v = stop1.v;
+        bannerHsva.a = stop1.a;
+        resetHsva(bannerHsva2, def.isGradient() ? def.color2() : def.color1());
+        bannerGradientEnabled = def.isGradient();
+        bannerDirection = def.direction();
+        bannerStyle = def.style();
+        editingStop2 = false;
         mode = Mode.COLOR;
         selectedRef = null;
         selectedTexture = null;
@@ -566,6 +814,14 @@ public class ColorPickerScreen extends Screen {
                 Component.translatable("createaddonorganizer.banner.delete.message", ref)));
     }
 
+    private static ColorSpec buildSpec(Hsva stop1, boolean gradientEnabled, Hsva stop2, ColorSpec.Direction direction,
+            ColorSpec.Style style) {
+        if (!gradientEnabled) {
+            return ColorSpec.solid(stop1.toArgb());
+        }
+        return new ColorSpec(stop1.toArgb(), stop2.toArgb(), direction, style);
+    }
+
     private void confirm() {
         if (highlightOnly) {
             if (hasHighlight) {
@@ -578,10 +834,10 @@ public class ColorPickerScreen extends Screen {
         }
 
         if (mode == Mode.COLOR) {
-            int argb = bannerHsva.toArgb();
+            ColorSpec bannerSpec = buildSpec(bannerHsva, bannerGradientEnabled, bannerHsva2, bannerDirection, bannerStyle);
             Config.clearSectionBanner(id);
-            Config.setSectionColor(id, argb);
-            LiveColors.apply(id, argb);
+            Config.setSectionColor(id, bannerSpec);
+            LiveColors.apply(id, bannerSpec);
         } else if (selectedRef != null && selectedTexture != null) {
             Config.setSectionBanner(id, selectedRef);
             LiveColors.applyTexture(id, selectedTexture);
@@ -595,9 +851,10 @@ public class ColorPickerScreen extends Screen {
             }
         }
 
-        int textArgb = textHsva.toArgb();
-        Config.setTextColor(id, textArgb);
-        LiveColors.applyTextColor(id, textArgb);
+        ColorSpec textSpec = buildSpec(textHsva, textGradientEnabled, textHsva2, ColorSpec.Direction.HORIZONTAL, ColorSpec.Style.SMOOTH);
+        Config.setTextColor(id, textSpec);
+        LiveColors.applyTextColor(id, textSpec);
+        Config.setScrollCutoff(id, scrollCutoff);
 
         if (boxMode == Mode.COLOR) {
             Config.clearSectionBoxTexture(id);
@@ -607,11 +864,25 @@ public class ColorPickerScreen extends Screen {
         }
 
         if (twoTone) {
-            Config.setTextSecondaryColor(id, text2Hsva.toArgb());
+            ColorSpec secondarySpec = buildSpec(text2Hsva, text2GradientEnabled, text2Hsva2, ColorSpec.Direction.HORIZONTAL, ColorSpec.Style.SMOOTH);
+            Config.setTextSecondaryColor(id, secondarySpec);
             Config.setTwoToneSplit(id, twoToneSplit);
         } else {
             Config.clearTextSecondaryColor(id);
             Config.clearTwoToneSplit(id);
+        }
+
+        if (outlineEnabled) {
+            ColorSpec outlineSpec = buildSpec(outlineHsva, outlineGradientEnabled, outlineHsva2, ColorSpec.Direction.HORIZONTAL, ColorSpec.Style.SMOOTH);
+            Config.setTextOutlineColor(id, outlineSpec);
+        } else {
+            Config.clearTextOutlineColor(id);
+        }
+        Config.setTitleTextShadow(id, shadowEnabled);
+        if (shadowUnlinked) {
+            Config.setTextShadowColor(id, shadowHsva.toArgb());
+        } else {
+            Config.clearTextShadowColor(id);
         }
 
         if (isMainTab) {
@@ -638,6 +909,7 @@ public class ColorPickerScreen extends Screen {
             }
             if (hit != null && hit != target) {
                 target = hit;
+                editingStop2 = false;
                 rebuildWidgets();
                 return true;
             }
@@ -686,11 +958,6 @@ public class ColorPickerScreen extends Screen {
 
         if (hoverBannerTooltip != null) {
             g.renderTooltip(this.font, hoverBannerTooltip, mouseX, mouseY);
-        }
-
-        if (bannerGalleryEmpty && galleryList != null) {
-            g.drawCenteredString(this.font, Component.translatable("createaddonorganizer.banner.noneForAddon"),
-                    this.width / 2, (galleryList.getY() + galleryList.getBottom()) / 2, 0xFFAAAAAA);
         }
 
         if (highlightOnly) {
@@ -774,7 +1041,8 @@ public class ColorPickerScreen extends Screen {
     private void drawBannerContent(GuiGraphics g, int bx, int by, int mouseX, int mouseY, boolean staticFrame) {
         int renderHeight = staticFrame ? BannerTextures.HEIGHT : CaoSection.CONTENT_H;
         if (mode == Mode.COLOR) {
-            g.fill(bx, by, bx + BannerTextures.WIDTH, by + renderHeight, bannerHsva.toArgb());
+            ColorSpec bannerSpec = buildSpec(bannerHsva, bannerGradientEnabled, bannerHsva2, bannerDirection, bannerStyle);
+            BannerFill.draw(g, bx, by, bx + BannerTextures.WIDTH, by + renderHeight, bannerSpec);
         } else if (selectedTexture != null) {
             float v = 0.0F;
             int texHeight = BannerTextures.HEIGHT;
@@ -797,15 +1065,30 @@ public class ColorPickerScreen extends Screen {
         if (hasBanner()) {
             int textX = bx + 5;
             int textY = by + 4;
-            int w = this.font.width(this.sectionName);
+            int maxX = bx + BannerTextures.WIDTH - 3;
+            int available = maxX - textX;
+            int viewMaxX = textX + Math.round(available * scrollCutoff);
+            int viewAvailable = viewMaxX - textX;
+            boolean scrolling = !staticFrame && this.font.width(this.sectionName) > viewAvailable;
             if (Config.tintedTextBox()) {
+                int w = scrolling ? viewAvailable : this.font.width(this.sectionName);
                 ResourceLocation boxTex = boxMode == Mode.IMAGE ? selectedBoxTexture : null;
                 BoxTextures.draw(g, boxTex, textX - 4, textY - 3, textX + w + 3, textY + 9 + 2, boxHsva.toArgb());
             }
-            if (twoTone) {
-                TwoToneText.draw(g, this.font, this.sectionName, textX, textY, textHsva.toArgb(), text2Hsva.toArgb(), twoToneSplit);
-            } else {
-                g.drawString(this.font, this.sectionName, textX, textY, textHsva.toArgb(), true);
+            boolean vanillaShadow = shadowEnabled && !shadowUnlinked;
+            int manualShadowArgb = shadowEnabled && shadowUnlinked ? shadowHsva.toArgb() : 0;
+            ColorSpec textSpec = buildSpec(textHsva, textGradientEnabled, textHsva2, ColorSpec.Direction.HORIZONTAL, ColorSpec.Style.SMOOTH);
+            ColorSpec secondarySpec = twoTone
+                    ? buildSpec(text2Hsva, text2GradientEnabled, text2Hsva2, ColorSpec.Direction.HORIZONTAL, ColorSpec.Style.SMOOTH)
+                    : null;
+            ColorSpec outlineSpec = outlineEnabled
+                    ? buildSpec(outlineHsva, outlineGradientEnabled, outlineHsva2, ColorSpec.Direction.HORIZONTAL, ColorSpec.Style.SMOOTH)
+                    : null;
+            TwoToneText.draw(g, this.font, this.sectionName, textX, textY, viewMaxX, textSpec,
+                    secondarySpec, twoToneSplit, vanillaShadow, manualShadowArgb, outlineSpec);
+
+            if (!staticFrame && target == EditTarget.TEXT && textEditTarget == TextTarget.PRIMARY) {
+                g.fill(viewMaxX, by, viewMaxX + 1, by + renderHeight, 0xFFFFFF55);
             }
         }
     }
@@ -877,10 +1160,14 @@ public class ColorPickerScreen extends Screen {
         }
 
         ResourceLocation ensure(int w, int h, float keyA, int cellSize, CellColor fn) {
-            if (texture != null && this.keyA == keyA && this.keyCell == cellSize) {
+            boolean sizeMatches = texture != null
+                    && texture.getPixels() != null
+                    && texture.getPixels().getWidth() == w
+                    && texture.getPixels().getHeight() == h;
+            if (sizeMatches && this.keyA == keyA && this.keyCell == cellSize) {
                 return id;
             }
-            NativeImage image = texture != null ? texture.getPixels() : new NativeImage(w, h, false);
+            NativeImage image = sizeMatches ? texture.getPixels() : new NativeImage(w, h, false);
             for (int cy = 0; cy < h; cy += cellSize) {
                 int ch = Math.min(cellSize, h - cy);
                 float fracY = (cy + ch / 2f) / h;
@@ -895,7 +1182,11 @@ public class ColorPickerScreen extends Screen {
                     }
                 }
             }
-            if (texture == null) {
+            if (!sizeMatches) {
+                if (texture != null) {
+                    Minecraft.getInstance().getTextureManager().release(id);
+                    texture.close();
+                }
                 texture = new DynamicTexture(image);
                 Minecraft.getInstance().getTextureManager().register(id, texture);
             } else {

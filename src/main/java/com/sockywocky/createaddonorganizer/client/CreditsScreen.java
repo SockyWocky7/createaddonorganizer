@@ -54,6 +54,11 @@ public class CreditsScreen extends Screen {
                     .selected(RemoteBanners.isLocalTesting())
                     .onValueChange((cb, checked) -> {
                         RemoteBanners.setLocalTesting(checked);
+                        if (checked) {
+                            RemoteBannerPools.refreshLocal();
+                        } else {
+                            RemoteBannerPools.loadCacheFromDisk();
+                        }
                         BannerTextures.invalidateRemoteCache();
                         rebuildWidgets();
                     })
@@ -62,6 +67,7 @@ public class CreditsScreen extends Screen {
                             Component.translatable("createaddonorganizer.colors.credits.refresh"),
                             b -> {
                                 RemoteBanners.refreshLocal();
+                                RemoteBannerPools.refreshLocal();
                                 BannerTextures.invalidateRemoteCache();
                                 rebuildWidgets();
                             })
