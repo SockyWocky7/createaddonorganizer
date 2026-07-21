@@ -9,7 +9,21 @@
       { "file": "Toolgun1.png", "v": 1 },
       { "file": "boatpropeller1.png", "v": 1 },
       { "file": "sabletouys1.png", "v": 1 },
-      { "file": "destroymod1.png", "v": 1 }
+      { "file": "destroymod1.png", "v": 1 },
+      { "file": "DriveByWire1.png", "v": 1 },
+      { "file": "drivebywiretypewriter2.png", "v": 1 },
+      { "file": "petrolparts.png", "v": 1 },
+      { "file": "CreateConnected.png", "v": 1 },
+      { "file": "dreamsndesires1.png", "v": 1 },
+      { "file": "miscsandthings2.png", "v": 1 }
+    ]
+  },
+  {
+    "name": "Dolphin + Arthur",
+    "color": "#44DEA5",
+    "banners": [
+      { "file": "bnb2.png", "v": 1 },
+      { "file": "aquaticambitions1.png", "v": 1 }
     ]
   },
   {
@@ -48,53 +62,82 @@
       { "file": "endertransmission1.png", "v": 1 },
       { "file": "copycatsplus1.png", "v": 1 },
       { "file": "soundofsteam1.png", "v": 1 },
-      { "file": "vista1.png", "v": 1 }
+      { "file": "vista1.png", "v": 1 },
+      { "file": "createbionics.png", "v": 1 },
+      { "file": "slagnembers.png", "v": 1 },
+      { "file": "slagnemberstools.png", "v": 1 },
+      { "file": "miscsandthings1.png", "v": 1 },
+      { "file": "fluidlogistics1.png", "v": 1 },
+      { "file": "sophisticatedcore1.png", "v": 1 },
+      { "file": "sophisticatedbackpacks1.png", "v": 1 },
+      { "file": "stuffnadditions1.png", "v": 1 },
+      { "file": "basic.png", "v": 1 },
+      { "file": "mired1.png", "v": 1 },
+      { "file": "cardanshafts1.png", "v": 1 },
+      { "file": "spawn.png", "v": 1 }
     ]
   },
   {
     "name": "rafael_x2",
     "color": "#7f3fd9",
     "banners": [
-      {"file": "powergrid1.png", "v": 1 },
-      {"file": "optics1.png", "v": 1 },
-      {"file": "gearsNknetics1.png", "v": 1 },
-      {"file": "extragauges1.png", "v": 1 },
-      {"file": "farmersdelight1.png", "v": 1 }
+      { "file": "powergrid1.png", "v": 1 },
+      { "file": "optics1.png", "v": 1 },
+      { "file": "gearsNknetics1.png", "v": 1 },
+      { "file": "extragauges1.png", "v": 1 },
+      { "file": "exposure1.png", "v": 1 },
+      { "file": "farmersdelight1.png", "v": 1 }
     ]
   },
   {
     "name": "Tcelovek",
     "color": "#83a832",
     "banners": [
-      {"file": "dyeableropes1.png", "v": 1 }
+      { "file": "dyeableropes1.png", "v": 1 }
     ]
   },
   {
     "name": "TheCrazy8",
-    "color": "#1a1954",
+    "color": "#ff004f",
     "banners": [
-      {"file": "createreestrogen1.png", "v": 1 }
+      { "file": "createreestrogen1.png", "v": 1 }
     ]
   },
   {
     "name": "Aaron",
     "color": "#975cf7",
     "banners": [
-      {"file": "copycatsplus2.png", "v": 1 }
+      { "file": "copycatsplus2.png", "v": 1 }
     ]
   },
   {
     "name": "felpz=-",
     "color": "#4d67d1",
     "banners": [
-      {"file": "treadmills1.png", "v": 1 },
-      {"file": "vibrantvaults1.png", "v": 1 },
-      {"file": "vibrantvaults2.png", "v": 1 },
-      {"file": "createinteriors2.png", "v": 1 },
-      {"file": "createnuclear1.png", "v": 1 },
-      {"file": "createautomatics1.png", "v": 1 },
-      {"file": "drivebywire1.png", "v": 1 },
-      {"file": "sableschematictool1.png", "v": 1 }
+      { "file": "treadmills1.png", "v": 1 },
+      { "file": "vibrantvaults1.png", "v": 1 },
+      { "file": "vibrantvaults2.png", "v": 1 },
+      { "file": "vibrantvaults3.png", "v": 1 },
+      { "file": "createinteriors2.png", "v": 1 },
+      { "file": "createnuclear1.png", "v": 1 },
+      { "file": "createautomatics1.png", "v": 1 },
+      { "file": "drivebywiretypewriter1.png", "v": 1 },
+      { "file": "sableschematictool1.png", "v": 1 }
+    ]
+  },
+  {
+    "name": "lanlan3292",
+    "color": "#9cb7e7",
+    "banners": [
+      { "file": "framed1.png", "v": 1 }
+    ]
+  },
+  {
+    "name": "Surprised",
+    "color": "#ff10f0",
+    "banners": [
+      { "file": "ratatouille1.png", "v": 1 },
+      { "file": "confectionery1.png", "v": 1 }
     ]
   }
 ]
