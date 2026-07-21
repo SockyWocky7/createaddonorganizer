@@ -43,7 +43,9 @@
       { "file": "vanilla.png", "v": 1 },
       { "file": "vanilla2.png", "v": 1 },
       { "file": "ae2.png", "v": 1 },
-      { "file": "ae2_dark.png", "v": 1 }
+      { "file": "ae2_dark.png", "v": 1 },
+      { "file": "create.png", "v": 1 },
+      { "file": "blueprint.png", "v": 1 }
     ]
   }
 ]
