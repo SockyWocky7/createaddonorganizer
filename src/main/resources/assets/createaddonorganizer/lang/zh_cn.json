@@ -161,7 +161,7 @@
   "createaddonorganizer.colors.deleteMain.title": "删除主板块?",
   "createaddonorganizer.colors.deleteMain.message": "这将移除 \"%s\" 的主板块身份。它本身的标签页将恢复独立，所有折叠在其中的板块都将移回其默认标签页。此操作无法撤销。",
   "createaddonorganizer.colors.deleteMain.builtinMessage": "这是机械动力自带的标签页之一。将其删除会阻止任何内容折叠到其中 —— 它本身的标签页将恢复为纯原版状态，而其他原本应该放置在这里的内容 (没有重定向到别处的内容) 将保持独立状态。稍后可通过\"全部重置\"、预设或\"所有设置\"来撤销此操作。",
-  "createaddonorganizer.devmode.title": "输入代码(意耳凌已饵)",
+  "createaddonorganizer.devmode.title": "输入代码",
   "createaddonorganizer.devmode.unauthorized": "我不知道你为什么会在这里。",
   "createaddonorganizer.devmode.activated": "开发者模式已激活!",
   "createaddonorganizer.devmode.deactivated": "开发者模式已停用!",
