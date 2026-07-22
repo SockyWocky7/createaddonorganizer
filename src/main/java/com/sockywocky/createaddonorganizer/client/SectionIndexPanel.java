@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import net.mcexpanded.fancytabsections.FTSInternal;
+import net.mcexpanded.fancytabsections.FancyTabSections;
+import net.mcexpanded.fancytabsections.Section.Section;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
@@ -49,6 +52,8 @@ public final class SectionIndexPanel {
     private static ResourceLocation lastTabId = null;
     private static boolean simulatedTab = false;
     private static int lastSimVersion = -1;
+    private static boolean ftsTab = false;
+    private static List<Section<?>> ftsSections = null;
 
     private static List<ResourceLocation> ids = null;
     private static List<Component> titles = List.of();
@@ -186,7 +191,18 @@ public final class SectionIndexPanel {
     }
 
     private static Integer rowOf(ResourceLocation id) {
-        return simulatedTab ? SimulatedHub.rowOf(id) : null;
+        if (simulatedTab) {
+            return SimulatedHub.rowOf(id);
+        }
+        if (ftsTab && ftsSections != null) {
+            for (Section<?> section : ftsSections) {
+                if (section.id().equals(id)) {
+                    int row = FTSInternal.getRowForSection(section);
+                    return row < 0 ? null : row;
+                }
+            }
+        }
+        return null;
     }
 
     private static int selectedIndex(CreativeModeInventoryScreen screen) {
@@ -248,13 +264,15 @@ public final class SectionIndexPanel {
     }
 
     public static boolean active() {
-        // FTS 6.0 renders its own section-index panel for tabs it registers; this panel now
-        // only covers Simulated-hub tabs, which aren't FTS sections.
         ResourceLocation tabId = selectedTabId();
         if (tabId == null) {
             return false;
         }
-        return SimulatedSupport.isLoaded() && SimulatedSupport.isMainTab(tabId);
+        if (SimulatedSupport.isLoaded() && SimulatedSupport.isMainTab(tabId)) {
+            return true;
+        }
+        List<Section<?>> sections = FancyTabSections.REGISTERED_TABS.get(tabId);
+        return sections != null && !sections.isEmpty();
     }
 
     public static int titleX() {
@@ -269,10 +287,13 @@ public final class SectionIndexPanel {
     private static void refresh() {
         ResourceLocation tabId = selectedTabId();
         boolean simTab = tabId != null && SimulatedSupport.isLoaded() && SimulatedSupport.isMainTab(tabId);
+        List<Section<?>> sections = simTab || tabId == null ? null : FancyTabSections.REGISTERED_TABS.get(tabId);
+        boolean isFtsTab = sections != null && !sections.isEmpty();
 
-        if (!simTab) {
-            // FTS 6.0 owns the index panel for its own registered tabs now; nothing for us to show.
+        if (!simTab && !isFtsTab) {
             simulatedTab = false;
+            ftsTab = false;
+            ftsSections = null;
             lastSimVersion = -1;
             if (!Objects.equals(tabId, lastTabId)) {
                 lastTabId = tabId;
@@ -285,6 +306,37 @@ public final class SectionIndexPanel {
             return;
         }
 
+        if (isFtsTab) {
+            boolean tabChanged = !Objects.equals(tabId, lastTabId);
+            boolean sectionsChanged = sections != ftsSections;
+            simulatedTab = false;
+            lastSimVersion = -1;
+            ftsTab = true;
+            lastTabId = tabId;
+            if (tabChanged) {
+                cancelAnimation();
+                panelScroll = 0f;
+            }
+            if (!sectionsChanged) {
+                return;
+            }
+            ftsSections = sections;
+            List<ResourceLocation> newIds = new ArrayList<>(sections.size());
+            List<Component> newTitles = new ArrayList<>(sections.size());
+            List<ItemStack> newIcons = new ArrayList<>(sections.size());
+            for (Section<?> section : sections) {
+                newIds.add(section.id());
+                newTitles.add(CaoSection.titleOf(section));
+                newIcons.add(section.icon());
+            }
+            ids = newIds;
+            titles = newTitles;
+            icons = newIcons;
+            return;
+        }
+
+        ftsTab = false;
+        ftsSections = null;
         int version = SimulatedHub.stateVersion();
         boolean tabChanged = !Objects.equals(tabId, lastTabId);
         if (!tabChanged && simulatedTab && version == lastSimVersion) {

@@ -2,8 +2,11 @@ package com.sockywocky.createaddonorganizer.client;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import net.mcexpanded.fancytabsections.FancyTabSections;
 import net.mcexpanded.fancytabsections.Section.Section;
@@ -122,17 +125,24 @@ public class AddSectionScreen extends Screen {
 
     private List<ResourceLocation> candidates() {
         String query = searchQuery.trim().toLowerCase(Locale.ROOT);
+        Set<ResourceLocation> knownHubs = SectionCatalog.knownHubs();
+        Map<ResourceLocation, Component> names = new HashMap<>();
         List<ResourceLocation> out = new ArrayList<>();
         for (var entry : BuiltInRegistries.CREATIVE_MODE_TAB.entrySet()) {
             ResourceLocation id = entry.getKey().location();
             boolean eligible = mode == Mode.SUB
-                    ? AddonDetection.isSubSectionCandidate(id)
-                    : AddonDetection.isHubPromotionCandidate(id);
-            if (eligible && (query.isEmpty() || nameOf(id).getString().toLowerCase(Locale.ROOT).contains(query))) {
+                    ? AddonDetection.isSubSectionCandidate(id, knownHubs)
+                    : AddonDetection.isHubPromotionCandidate(id, knownHubs);
+            if (!eligible) {
+                continue;
+            }
+            Component name = nameOf(id);
+            if (query.isEmpty() || name.getString().toLowerCase(Locale.ROOT).contains(query)) {
+                names.put(id, name);
                 out.add(id);
             }
         }
-        out.sort((a, b) -> nameOf(a).getString().compareToIgnoreCase(nameOf(b).getString()));
+        out.sort((a, b) -> names.get(a).getString().compareToIgnoreCase(names.get(b).getString()));
         return out;
     }
 
@@ -224,10 +234,12 @@ public class AddSectionScreen extends Screen {
         private class Row extends ContainerObjectSelectionList.Entry<Row> {
             private final ResourceLocation id;
             private final Component name;
+            private final boolean placed;
 
             Row(ResourceLocation id) {
                 this.id = id;
                 this.name = nameOf(id);
+                this.placed = AddonDetection.isPlaced(id);
             }
 
             @Override
@@ -259,7 +271,7 @@ public class AddSectionScreen extends Screen {
                 ItemStack icon = SafeIcon.of(tab);
                 SafeIcon.render(g, icon, left + 4, top + (rowHeight - 16) / 2);
                 g.drawString(font, name, left + 26, top + (rowHeight - 8) / 2, 0xFFFFFFFF);
-                if (AddonDetection.isPlaced(id)) {
+                if (placed) {
                     Component tag = Component.translatable("createaddonorganizer.addsection.placed");
                     g.drawString(font, tag, left + rowWidth - font.width(tag) - 4, top + (rowHeight - 8) / 2, 0xFFAAAAAA);
                 }

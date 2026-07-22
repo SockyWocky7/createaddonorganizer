@@ -81,7 +81,7 @@ public class Config {
     public static final ModConfigSpec.ConfigValue<String> DEFAULT_BANNER_GRADIENT = BUILDER
             .comment("Optional gradient for the default banner, as \"<secondHex>|<DIRECTION>|<STYLE>\"",
                     "(DIRECTION: VERTICAL/HORIZONTAL/DIAGONAL_UP/DIAGONAL_DOWN, STYLE: SMOOTH/DITHER_2X2/",
-                    "DITHER_4X4/DITHER_8X8/DITHER_TRICOLOR). Empty (default) means a flat colour.")
+                    "DITHER_4X4/DITHER_TRICOLOR/DITHER_QUADCOLOR). Empty (default) means a flat colour.")
             .define("defaultBannerGradient", "");
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> SECTION_COLORS = BUILDER
@@ -164,6 +164,24 @@ public class Config {
                     "Managed by the in-game box editor.")
             .defineListAllowEmpty("boxTextures", List.of(),
                     () -> "somemod:main = res:createaddonorganizer:textures/box/example.png", Config::isValidBanner);
+
+    public static final ModConfigSpec.DoubleValue DEFAULT_BOX_DARKEN = BUILDER
+            .comment("How much to darken a per-section contrast-box IMAGE when rendered (0 = no darkening,",
+                    "1 = fully black). Only applies while a box texture is set.")
+            .defineInRange("defaultBoxDarken", 0.0, 0.0, 1.0);
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> BOX_DARKENS = BUILDER
+            .comment("Per-section contrast-box image darken overrides, keyed by tab ID.")
+            .defineListAllowEmpty("boxDarkens", List.of(), () -> "somemod:main = 0.0", Config::isValidSectionFraction);
+
+    public static final ModConfigSpec.DoubleValue DEFAULT_BOX_OPACITY = BUILDER
+            .comment("Opacity of a per-section contrast-box IMAGE when rendered (0 = fully transparent,",
+                    "1 = fully opaque). Only applies while a box texture is set.")
+            .defineInRange("defaultBoxOpacity", 1.0, 0.0, 1.0);
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> BOX_OPACITIES = BUILDER
+            .comment("Per-section contrast-box image opacity overrides, keyed by tab ID.")
+            .defineListAllowEmpty("boxOpacities", List.of(), () -> "somemod:main = 1.0", Config::isValidSectionFraction);
 
     public static final ModConfigSpec.IntValue DEFAULT_TEXT_COLOR = BUILDER
             .comment("Default section title text colour (ARGB int).")
@@ -283,15 +301,15 @@ public class Config {
 
     static {
         BUILDER.pop();
-        BUILDER.comment("The section-index jump list for tabs Fancy Tab Sections doesn't cover",
-                        "(Simulated-family addon tabs).")
+        BUILDER.comment("The section-index jump list shown on any tab with organized sections",
+                        "(both Fancy Tab Sections tabs and Simulated-family addon tabs).")
                 .push("interface");
     }
 
     public enum IndexPanelStyle { VANILLA, DARK, REFURBISHED, BACKPORT }
 
     public static final ModConfigSpec.EnumValue<IndexPanelStyle> INDEX_PANEL_STYLE = BUILDER
-            .comment("Visual style of the section-index panel on Simulated-family tabs: VANILLA (light",
+            .comment("Visual style of the section-index panel: VANILLA (light",
                     "raised panel, default), DARK (flat dark panel), REFURBISHED (beveled side tabs),",
                     "BACKPORT (compact textured panel).")
             .defineEnum("indexPanelStyle", IndexPanelStyle.VANILLA);
@@ -335,6 +353,11 @@ public class Config {
                 DEFAULT_TEXT_SHADOW_COLOR.getDefault(), TEXT_SHADOW_COLORS.getDefault(),
                 DEFAULT_SCROLL_CUTOFF.getDefault(), SCROLL_CUTOFFS.getDefault(),
                 DEFAULT_TWO_TONE_SPLIT.getDefault(), TEXT_SPLITS.getDefault());
+        DEFAULT_BOX_DARKEN.set(DEFAULT_BOX_DARKEN.getDefault());
+        BOX_DARKENS.set(BOX_DARKENS.getDefault());
+        DEFAULT_BOX_OPACITY.set(DEFAULT_BOX_OPACITY.getDefault());
+        BOX_OPACITIES.set(BOX_OPACITIES.getDefault());
+        SPEC.save();
     }
 
     public static void applyOrganization(List<? extends String> sectionOrder, List<? extends String> sectionNames) {
@@ -979,6 +1002,30 @@ public class Config {
         List<String> updated = withoutEntry(SCROLL_CUTOFFS.get(), id);
         updated.add(id + " = " + fraction);
         SCROLL_CUTOFFS.set(updated);
+        SPEC.save();
+    }
+
+    public static float boxDarkenFor(ResourceLocation id) {
+        Float override = lookupFraction(BOX_DARKENS.get(), id);
+        return override != null ? override : DEFAULT_BOX_DARKEN.get().floatValue();
+    }
+
+    public static void setBoxDarken(ResourceLocation id, float fraction) {
+        List<String> updated = withoutEntry(BOX_DARKENS.get(), id);
+        updated.add(id + " = " + fraction);
+        BOX_DARKENS.set(updated);
+        SPEC.save();
+    }
+
+    public static float boxOpacityFor(ResourceLocation id) {
+        Float override = lookupFraction(BOX_OPACITIES.get(), id);
+        return override != null ? override : DEFAULT_BOX_OPACITY.get().floatValue();
+    }
+
+    public static void setBoxOpacity(ResourceLocation id, float fraction) {
+        List<String> updated = withoutEntry(BOX_OPACITIES.get(), id);
+        updated.add(id + " = " + fraction);
+        BOX_OPACITIES.set(updated);
         SPEC.save();
     }
 

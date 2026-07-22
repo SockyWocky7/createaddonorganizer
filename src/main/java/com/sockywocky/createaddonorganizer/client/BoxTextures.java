@@ -19,6 +19,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.sockywocky.createaddonorganizer.createaddonorganizer;
 
 import net.minecraft.client.Minecraft;
@@ -26,6 +27,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.util.Mth;
 import net.neoforged.fml.loading.FMLPaths;
 
 public final class BoxTextures {
@@ -287,10 +289,17 @@ public final class BoxTextures {
         }
     }
 
-    public static void draw(GuiGraphics g, ResourceLocation texture, int x1, int y1, int x2, int y2, int fallbackArgb) {
+    public static void draw(GuiGraphics g, ResourceLocation texture, int x1, int y1, int x2, int y2, int fallbackArgb,
+            float darken, float opacity) {
         OptionalInt texW = texture != null ? nativeWidth(texture) : OptionalInt.empty();
         if (texture != null && texW.isPresent()) {
+            float mult = 1f - Mth.clamp(darken, 0f, 1f);
+            float alpha = Mth.clamp(opacity, 0f, 1f);
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShaderColor(mult, mult, mult, alpha);
             blit3Slice(g, texture, x1, y1, x2 - x1, y2 - y1, texW.getAsInt(), HEIGHT);
+            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         } else {
             g.fill(x1, y1, x2, y2, fallbackArgb);
         }

@@ -11,7 +11,8 @@
     "ItemPickerMenuAccessor",
     "AbstractContainerScreenMixin",
     "CreativeModeTabBuildContentsGuardMixin",
-    "IndexPanelMixin"
+    "IndexPanelMixin",
+    "ModListSearchMixin"
   ],
   "injectors": {
     "defaultRequire": 1

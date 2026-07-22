@@ -4,7 +4,7 @@ public record ColorSpec(int color1, Integer color2, Direction direction, Style s
 
     public enum Direction { VERTICAL, HORIZONTAL, DIAGONAL_UP, DIAGONAL_DOWN }
 
-    public enum Style { SMOOTH, DITHER_2X2, DITHER_4X4, DITHER_8X8, DITHER_TRICOLOR }
+    public enum Style { SMOOTH, DITHER_2X2, DITHER_4X4, DITHER_TRICOLOR, DITHER_QUADCOLOR }
 
     public static ColorSpec solid(int argb) {
         return new ColorSpec(argb, null, Direction.VERTICAL, Style.SMOOTH);

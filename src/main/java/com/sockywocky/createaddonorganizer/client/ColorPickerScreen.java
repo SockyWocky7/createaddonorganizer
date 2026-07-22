@@ -89,6 +89,8 @@ public class ColorPickerScreen extends Screen {
     private Mode boxMode;
     private ResourceLocation selectedBoxTexture;
     private String selectedBoxRef;
+    private float boxDarken;
+    private float boxOpacity;
 
     private int previewY;
     private int panelTop;
@@ -165,6 +167,8 @@ public class ColorPickerScreen extends Screen {
         } else {
             this.boxMode = Mode.COLOR;
         }
+        this.boxDarken = Config.boxDarkenFor(id);
+        this.boxOpacity = Config.boxOpacityFor(id);
 
         this.isMainTab = isMainTab;
         this.highlightOnly = SimulatedSupport.isMainTab(id);
@@ -386,18 +390,28 @@ public class ColorPickerScreen extends Screen {
             addRenderableWidget(new ChannelSlider(x + 90, y + 3, 110, 20, Component.translatable("createaddonorganizer.colors.alpha"),
                     boxHsva.a, v -> boxHsva.a = (float) v));
         } else {
-            addTintedBoxCheckbox(x, contentY);
-            int rowY = contentY + 24;
+            int boxRowY = contentY + 8;
+            addTintedBoxCheckbox(x, boxRowY + 4);
+            int sliderGap = 6;
+            int checkboxW = 50;
+            int sliderW = (200 - checkboxW - sliderGap) / 2;
+            addRenderableWidget(new ChannelSlider(x + checkboxW, boxRowY + 3, sliderW, ROW_H,
+                    Component.translatable("createaddonorganizer.colors.boxDarken"),
+                    boxDarken, v -> boxDarken = (float) v));
+            addRenderableWidget(new ChannelSlider(x + checkboxW + sliderW + sliderGap, boxRowY + 3, sliderW, ROW_H,
+                    Component.translatable("createaddonorganizer.colors.boxOpacity"),
+                    boxOpacity, v -> boxOpacity = (float) v));
+            int rowY = boxRowY + ROW_H + 12;
 
             boolean isUpload = selectedBoxRef != null && selectedBoxRef.startsWith("file:");
             addRenderableWidget(Button.builder(Component.translatable("createaddonorganizer.banner.upload"),
-                    b -> uploadBox()).bounds(x, rowY, isUpload ? 130 : 200, 20).build());
+                    b -> uploadBox()).bounds(x, rowY, isUpload ? 150 : 200, 20).build());
             if (isUpload) {
                 addRenderableWidget(Button.builder(Component.translatable("createaddonorganizer.banner.delete"),
-                        b -> confirmDeleteBox()).bounds(x + 134, rowY, 66, 20).build());
+                        b -> confirmDeleteBox()).bounds(x + 154, rowY, 46, 20).build());
             }
 
-            int listTop = rowY + 25;
+            int listTop = rowY + 29;
             int listBottom = Config.bannerEditorPreviewTop() ? this.height - 34 : previewY - 8;
             double restoreScroll = boxGalleryList != null ? boxGalleryList.getScrollAmount() : 0;
             boxGalleryList = new BoxGalleryList(this.minecraft, this.width, listBottom - listTop, listTop, BoxTextures.HEIGHT + 10);
@@ -592,19 +606,19 @@ public class ColorPickerScreen extends Screen {
         return switch (style) {
             case SMOOTH -> ColorSpec.Style.DITHER_2X2;
             case DITHER_2X2 -> ColorSpec.Style.DITHER_4X4;
-            case DITHER_4X4 -> ColorSpec.Style.DITHER_8X8;
-            case DITHER_8X8 -> ColorSpec.Style.DITHER_TRICOLOR;
-            case DITHER_TRICOLOR -> ColorSpec.Style.SMOOTH;
+            case DITHER_4X4 -> ColorSpec.Style.DITHER_TRICOLOR;
+            case DITHER_TRICOLOR -> ColorSpec.Style.DITHER_QUADCOLOR;
+            case DITHER_QUADCOLOR -> ColorSpec.Style.SMOOTH;
         };
     }
 
     private static ColorSpec.Style prevStyle(ColorSpec.Style style) {
         return switch (style) {
-            case SMOOTH -> ColorSpec.Style.DITHER_TRICOLOR;
+            case SMOOTH -> ColorSpec.Style.DITHER_QUADCOLOR;
             case DITHER_2X2 -> ColorSpec.Style.SMOOTH;
             case DITHER_4X4 -> ColorSpec.Style.DITHER_2X2;
-            case DITHER_8X8 -> ColorSpec.Style.DITHER_4X4;
-            case DITHER_TRICOLOR -> ColorSpec.Style.DITHER_8X8;
+            case DITHER_TRICOLOR -> ColorSpec.Style.DITHER_4X4;
+            case DITHER_QUADCOLOR -> ColorSpec.Style.DITHER_TRICOLOR;
         };
     }
 
@@ -633,8 +647,8 @@ public class ColorPickerScreen extends Screen {
             case SMOOTH -> "createaddonorganizer.colors.gradient.style.smooth";
             case DITHER_2X2 -> "createaddonorganizer.colors.gradient.style.dither2x2";
             case DITHER_4X4 -> "createaddonorganizer.colors.gradient.style.dither4x4";
-            case DITHER_8X8 -> "createaddonorganizer.colors.gradient.style.dither8x8";
             case DITHER_TRICOLOR -> "createaddonorganizer.colors.gradient.style.dithertricolor";
+            case DITHER_QUADCOLOR -> "createaddonorganizer.colors.gradient.style.ditherquadcolor";
         };
         return Component.translatable("createaddonorganizer.colors.gradient.style").copy().append(": ").append(Component.translatable(key));
     }
@@ -723,6 +737,8 @@ public class ColorPickerScreen extends Screen {
         boxMode = Mode.COLOR;
         selectedBoxRef = null;
         selectedBoxTexture = null;
+        boxDarken = Config.DEFAULT_BOX_DARKEN.get().floatValue();
+        boxOpacity = Config.DEFAULT_BOX_OPACITY.get().floatValue();
         rebuildWidgets();
     }
 
@@ -862,6 +878,8 @@ public class ColorPickerScreen extends Screen {
         } else if (selectedBoxRef != null && selectedBoxTexture != null) {
             Config.setSectionBoxTexture(id, selectedBoxRef);
         }
+        Config.setBoxDarken(id, boxDarken);
+        Config.setBoxOpacity(id, boxOpacity);
 
         if (twoTone) {
             ColorSpec secondarySpec = buildSpec(text2Hsva, text2GradientEnabled, text2Hsva2, ColorSpec.Direction.HORIZONTAL, ColorSpec.Style.SMOOTH);
@@ -1073,7 +1091,8 @@ public class ColorPickerScreen extends Screen {
             if (Config.tintedTextBox()) {
                 int w = scrolling ? viewAvailable : this.font.width(this.sectionName);
                 ResourceLocation boxTex = boxMode == Mode.IMAGE ? selectedBoxTexture : null;
-                BoxTextures.draw(g, boxTex, textX - 4, textY - 3, textX + w + 3, textY + 9 + 2, boxHsva.toArgb());
+                BoxTextures.draw(g, boxTex, textX - 4, textY - 3, textX + w + 3, textY + 9 + 2, boxHsva.toArgb(),
+                        boxDarken, boxOpacity);
             }
             boolean vanillaShadow = shadowEnabled && !shadowUnlinked;
             int manualShadowArgb = shadowEnabled && shadowUnlinked ? shadowHsva.toArgb() : 0;

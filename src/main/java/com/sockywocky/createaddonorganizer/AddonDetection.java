@@ -1,5 +1,7 @@
 package com.sockywocky.createaddonorganizer;
 
+import java.util.Set;
+
 import net.mcexpanded.fancytabsections.FancyTabSections;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -57,20 +59,28 @@ public final class AddonDetection {
     }
 
     public static boolean isSubSectionCandidate(ResourceLocation id) {
+        return isSubSectionCandidate(id, SectionCatalog.knownHubs());
+    }
+
+    public static boolean isSubSectionCandidate(ResourceLocation id, Set<ResourceLocation> knownHubs) {
         CreativeModeTab tab = BuiltInRegistries.CREATIVE_MODE_TAB.get(id);
         return tab != null && tab.getType() == CreativeModeTab.Type.CATEGORY
                 && !CREATE.equals(id.getNamespace())
                 && !MINECRAFT.equals(id.getNamespace())
-                && !SectionCatalog.knownHubs().contains(id)
+                && !knownHubs.contains(id)
                 && !Config.isBuiltinExcluded(id)
                 && !SimulatedSupport.isMainTab(id);
     }
 
     public static boolean isHubPromotionCandidate(ResourceLocation id) {
+        return isHubPromotionCandidate(id, SectionCatalog.knownHubs());
+    }
+
+    public static boolean isHubPromotionCandidate(ResourceLocation id, Set<ResourceLocation> knownHubs) {
         CreativeModeTab tab = BuiltInRegistries.CREATIVE_MODE_TAB.get(id);
         return tab != null && tab.getType() == CreativeModeTab.Type.CATEGORY
                 && !MINECRAFT.equals(id.getNamespace())
-                && !SectionCatalog.knownHubs().contains(id)
+                && !knownHubs.contains(id)
                 && !Config.isBuiltinExcluded(id);
     }
 

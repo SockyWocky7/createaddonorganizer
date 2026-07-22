@@ -9,6 +9,7 @@ import com.sockywocky.createaddonorganizer.client.Presets.PresetData;
 import com.sockywocky.createaddonorganizer.client.Presets.PresetRef;
 import com.sockywocky.createaddonorganizer.createaddonorganizer;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -158,6 +159,12 @@ public class PresetsScreen extends Screen {
     }
 
     private void applyWithConfirm(PresetRef ref) {
+        Component message = Component.translatable("createaddonorganizer.colors.presets.applyConfirm.message");
+        if ("Rainbow".equalsIgnoreCase(ref.name())) {
+            message = message.copy().append("\n\n").append(
+                    Component.translatable("createaddonorganizer.colors.presets.rainbowWarning")
+                            .withStyle(ChatFormatting.RED));
+        }
         this.minecraft.setScreen(new ConfirmScreen(confirmed -> {
             if (confirmed) {
                 PresetData data = Presets.load(ref.ref());
@@ -168,8 +175,7 @@ public class PresetsScreen extends Screen {
                 }
             }
             this.minecraft.setScreen(this);
-        }, Component.translatable("createaddonorganizer.colors.presets.applyConfirm.title"),
-                Component.translatable("createaddonorganizer.colors.presets.applyConfirm.message")));
+        }, Component.translatable("createaddonorganizer.colors.presets.applyConfirm.title"), message));
     }
 
     @Override
@@ -257,13 +263,30 @@ public class PresetsScreen extends Screen {
                     renameBox.render(g, mouseX, mouseY, partialTick);
                     renameConfirm.render(g, mouseX, mouseY, partialTick);
                     renameCancel.render(g, mouseX, mouseY, partialTick);
+                } else if ("Rainbow".equalsIgnoreCase(ref.name())) {
+                    drawRainbowName(g, ref.name(), left + 4, textY);
+                    if (!tag.isEmpty()) {
+                        g.drawString(font, tag, labelX, textY, 0xFFAAAAAA);
+                    }
                 } else {
-                    g.drawString(font, ref.name(), left + 4, textY, 0xFFFFFFFF);
+                    int nameColor = "Images".equalsIgnoreCase(ref.name()) ? 0xFFFFFF55 : 0xFFFFFFFF;
+                    g.drawString(font, ref.name(), left + 4, textY, nameColor);
                     if (!tag.isEmpty()) {
                         g.drawString(font, tag, labelX, textY, 0xFFAAAAAA);
                     }
                 }
                 edit.render(g, mouseX, mouseY, partialTick);
+            }
+
+            private void drawRainbowName(GuiGraphics g, String name, int x, int y) {
+                int cursorX = x;
+                for (int i = 0; i < name.length(); i++) {
+                    String ch = name.substring(i, i + 1);
+                    float hue = (float) i / name.length();
+                    int color = 0xFF000000 | ColorUtil.hsvToRgb(hue, 1f, 1f);
+                    g.drawString(font, ch, cursorX, y, color);
+                    cursorX += font.width(ch);
+                }
             }
         }
     }

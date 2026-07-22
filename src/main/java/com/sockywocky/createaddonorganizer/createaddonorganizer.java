@@ -204,6 +204,10 @@ public class createaddonorganizer {
                     kept.add(section);
                     continue;
                 }
+                if (FTSInternal.isCollapsed(cao)) {
+                    kept.add(section);
+                    continue;
+                }
                 List<ItemStack> stacks = cao.items().getStacks();
                 List<ItemStack> surviving = new ArrayList<>(stacks.size());
                 for (ItemStack stack : stacks) {

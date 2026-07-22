@@ -184,6 +184,16 @@ public final class Presets {
         LiveColors.applyOrder(parent, ordered);
     }
 
+    private static int pinnedRank(String name) {
+        if ("Images".equalsIgnoreCase(name)) {
+            return 0;
+        }
+        if ("Rainbow".equalsIgnoreCase(name)) {
+            return 1;
+        }
+        return 2;
+    }
+
     public static List<PresetRef> gallery() {
         List<PresetRef> bundled = new ArrayList<>();
         Map<ResourceLocation, Resource> found = Minecraft.getInstance().getResourceManager()
@@ -195,7 +205,14 @@ public final class Presets {
                 bundled.add(new PresetRef(ref, data.name()));
             }
         }
-        bundled.sort((a, b) -> a.name().compareToIgnoreCase(b.name()));
+        bundled.sort((a, b) -> {
+            int aRank = pinnedRank(a.name());
+            int bRank = pinnedRank(b.name());
+            if (aRank != bRank) {
+                return Integer.compare(aRank, bRank);
+            }
+            return a.name().compareToIgnoreCase(b.name());
+        });
 
         List<PresetRef> user = new ArrayList<>();
         if (Files.isDirectory(PRESETS_DIR)) {

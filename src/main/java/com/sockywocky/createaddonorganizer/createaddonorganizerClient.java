@@ -1,5 +1,6 @@
 package com.sockywocky.createaddonorganizer;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.sockywocky.createaddonorganizer.client.DevMode;
 import com.sockywocky.createaddonorganizer.client.Notice;
 import com.sockywocky.createaddonorganizer.client.RemoteBannerPools;
@@ -7,13 +8,17 @@ import com.sockywocky.createaddonorganizer.client.RemoteBanners;
 import com.sockywocky.createaddonorganizer.client.RemoteBoxTextures;
 import com.sockywocky.createaddonorganizer.client.SectionColorsScreen;
 
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.item.CreativeModeTab;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
@@ -25,16 +30,21 @@ public class createaddonorganizerClient {
 
     private static final int MAX_ORGANIZE_ATTEMPTS = 10;
 
+    private static final KeyMapping OPEN_CONFIG_KEY = new KeyMapping("key.createaddonorganizer.openConfig",
+            InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), "key.categories.createaddonorganizer");
+
     private static boolean done = false;
     private static boolean remoteSyncStarted = false;
     private static ClientLevel lastSeenLevel;
     private static int stableTicks = 0;
     private static int organizeAttempts = 0;
 
-    public createaddonorganizerClient(ModContainer container) {
+    public createaddonorganizerClient(ModContainer container, IEventBus modEventBus) {
 
         container.registerExtensionPoint(IConfigScreenFactory.class,
                 (modContainer, parent) -> new SectionColorsScreen(parent, modContainer));
+
+        modEventBus.addListener((RegisterKeyMappingsEvent event) -> event.register(OPEN_CONFIG_KEY));
 
         NeoForge.EVENT_BUS.addListener(createaddonorganizerClient::onClientTick);
         NeoForge.EVENT_BUS.addListener(createaddonorganizerClient::onScreenRender);
@@ -45,7 +55,12 @@ public class createaddonorganizerClient {
     }
 
     private static void onClientTick(ClientTickEvent.Post event) {
-        DevMode.tick(Minecraft.getInstance());
+        Minecraft mc = Minecraft.getInstance();
+        while (OPEN_CONFIG_KEY.consumeClick()) {
+            ModList.get().getModContainerById(createaddonorganizer.MODID)
+                    .ifPresent(modContainer -> mc.setScreen(new SectionColorsScreen(mc.screen, modContainer)));
+        }
+        DevMode.tick(mc);
         if (!remoteSyncStarted) {
             remoteSyncStarted = true;
             RemoteBanners.loadCacheFromDisk();
@@ -58,7 +73,6 @@ public class createaddonorganizerClient {
         if (done) {
             return;
         }
-        Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) {
             lastSeenLevel = null;
             stableTicks = 0;

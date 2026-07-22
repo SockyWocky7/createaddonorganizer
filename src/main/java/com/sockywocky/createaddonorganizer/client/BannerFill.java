@@ -28,17 +28,6 @@ public final class BannerFill {
             {15, 7, 13, 5},
     };
 
-    private static final int[][] BAYER_8X8 = {
-            {0, 32, 8, 40, 2, 34, 10, 42},
-            {48, 16, 56, 24, 50, 18, 58, 26},
-            {12, 44, 4, 36, 14, 46, 6, 38},
-            {60, 28, 52, 20, 62, 30, 54, 22},
-            {3, 35, 11, 43, 1, 33, 9, 41},
-            {51, 19, 59, 27, 49, 17, 57, 25},
-            {15, 47, 7, 39, 13, 45, 5, 37},
-            {63, 31, 55, 23, 61, 29, 53, 21},
-    };
-
     private static final int CACHE_LIMIT = 64;
     private static final Map<String, CachedTexture> CACHE = new LinkedHashMap<>(16, 0.75f, true) {
         @Override
@@ -78,9 +67,8 @@ public final class BannerFill {
 
         NativeImage image = new NativeImage(w, h, false);
         int[][] matrix = bayerMatrixFor(spec.style());
-        boolean tricolor = spec.style() == ColorSpec.Style.DITHER_TRICOLOR;
+        int bands = bandsFor(spec.style());
         int color2 = spec.color2();
-        int midColor = tricolor ? ColorUtil.lerpArgb(0.5f, spec.color1(), color2) : 0;
         for (int py = 0; py < h; py++) {
             for (int px = 0; px < w; px++) {
                 float frac = fraction(spec.direction(), px, py, w, h);
@@ -88,11 +76,12 @@ public final class BannerFill {
                 if (matrix != null) {
                     int n = matrix.length;
                     float threshold = (matrix[py % n][px % n] + 0.5f) / (n * n);
-                    if (tricolor) {
-                        boolean lowerHalf = frac < 0.5f;
-                        int fromColor = lowerHalf ? spec.color1() : midColor;
-                        int toColor = lowerHalf ? midColor : color2;
-                        float localFrac = lowerHalf ? frac * 2f : (frac - 0.5f) * 2f;
+                    if (bands > 1) {
+                        float scaled = frac * bands;
+                        int band = Math.min(bands - 1, (int) scaled);
+                        float localFrac = scaled - band;
+                        int fromColor = ColorUtil.lerpArgb((float) band / bands, spec.color1(), color2);
+                        int toColor = ColorUtil.lerpArgb((float) (band + 1) / bands, spec.color1(), color2);
                         argb = localFrac > threshold ? toColor : fromColor;
                     } else {
                         argb = frac > threshold ? color2 : spec.color1();
@@ -116,8 +105,15 @@ public final class BannerFill {
         return switch (style) {
             case SMOOTH -> null;
             case DITHER_2X2 -> BAYER_2X2;
-            case DITHER_4X4, DITHER_TRICOLOR -> BAYER_4X4;
-            case DITHER_8X8 -> BAYER_8X8;
+            case DITHER_4X4, DITHER_TRICOLOR, DITHER_QUADCOLOR -> BAYER_4X4;
+        };
+    }
+
+    private static int bandsFor(ColorSpec.Style style) {
+        return switch (style) {
+            case DITHER_TRICOLOR -> 2;
+            case DITHER_QUADCOLOR -> 3;
+            default -> 1;
         };
     }
 

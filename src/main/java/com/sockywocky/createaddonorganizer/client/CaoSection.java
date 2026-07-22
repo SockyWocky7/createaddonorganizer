@@ -130,7 +130,8 @@ public record CaoSection(ResourceLocation id, Component title, ColorSpec bannerC
         if (Config.tintedTextBox()) {
             int w = scrolling ? viewAvailable : font.width(shown);
             ResourceLocation boxTexture = BoxTextures.resolve(Config.boxTextureRefFor(id));
-            BoxTextures.draw(g, boxTexture, textX - 4, textY - 3, textX + w + 3, textY + 9 + 2, Config.boxColorFor(id));
+            BoxTextures.draw(g, boxTexture, textX - 4, textY - 3, textX + w + 3, textY + 9 + 2, Config.boxColorFor(id),
+                    Config.boxDarkenFor(id), Config.boxOpacityFor(id));
         }
         boolean shadowOn = Config.titleTextShadow(id);
         Integer shadowOverride = shadowOn ? Config.textShadowColorFor(id) : null;

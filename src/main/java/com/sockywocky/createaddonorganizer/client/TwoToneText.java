@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 
 public final class TwoToneText {
-    private static final int SCROLL_CYCLE_MS = 100;
+    private static final int SCROLL_CYCLE_MS = 300;
 
     private static final int VERTICAL_BANDS = 3;
 
