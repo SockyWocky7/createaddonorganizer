@@ -75,6 +75,12 @@
       { "file": "basic.png", "v": 1 },
       { "file": "mired1.png", "v": 1 },
       { "file": "cardanshafts1.png", "v": 1 },
+      { "file": "arsnouveau.png", "v": 1 },
+      { "file": "arsnouveau2.png", "v": 1 },
+      { "file": "glyphs.png", "v": 1 },
+      { "file": "ironsspells.png", "v": 1 },
+      { "file": "littlelogistics.png", "v": 1 },
+      { "file": "taczammo.png", "v": 1 },
       { "file": "spawn.png", "v": 1 }
     ]
   },
