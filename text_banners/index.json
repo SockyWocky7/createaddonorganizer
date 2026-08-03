@@ -29,24 +29,40 @@
       { "file": "nixieboard.png", "v": 2 }
     ]
   },
- {
-  "name": "The Tophatted Dolphin",
-  "color": "#30FF4B",
-  "textures": [
-    { "file": "stickynote.png", "v": 1 },
-    { "file": "shadowsteelcasing.png", "v": 1 },
-    { "file": "scroll.png", "v": 1 },
-    { "file": "refinedradiancecasing.png", "v": 1 },
-    { "file": "industrialplating.png", "v": 1 },
-    { "file": "displayboard.png", "v": 1 },
-    { "file": "creativecasing.png", "v": 1 },
-    { "file": "coppercasing.png", "v": 1 },
-    { "file": "bullet.png", "v": 1 },
-    { "file": "brasscasing.png", "v": 1 },
-    { "file": "ballon.png", "v": 1 },
-    { "file": "andesitecasing.png", "v": 1 }
-  ]
-},
+  {
+    "name": "The Tophatted Dolphin",
+    "color": "#30FF4B",
+    "textures": [
+      { "file": "stickynote.png", "v": 1 },
+      { "file": "shadowsteelcasing.png", "v": 1 },
+      { "file": "scroll.png", "v": 1 },
+      { "file": "refinedradiancecasing.png", "v": 1 },
+      { "file": "industrialplating.png", "v": 1 },
+      { "file": "displayboard.png", "v": 1 },
+      { "file": "creativecasing.png", "v": 1 },
+      { "file": "coppercasing.png", "v": 1 },
+      { "file": "bullet.png", "v": 1 },
+      { "file": "brasscasing.png", "v": 1 },
+      { "file": "ballon.png", "v": 1 },
+      { "file": "andesitecasing.png", "v": 1 },
+      { "file": "cyannameplate.png", "v": 1 },
+      { "file": "brownnameplate.png", "v": 1 },
+      { "file": "blacknameplate.png", "v": 1 },
+      { "file": "bluenameplate.png", "v": 1 },
+      { "file": "yellownameplate.png", "v": 1 },
+      { "file": "whitenameplate.png", "v": 1 },
+      { "file": "purplenameplate.png", "v": 1 },
+      { "file": "pinknameplate.png", "v": 1 },
+      { "file": "orangenameplate.png", "v": 1 },
+      { "file": "magentanameplate.png", "v": 1 },
+      { "file": "limenameplate.png", "v": 1 },
+      { "file": "lightgraynameplate.png", "v": 1 },
+      { "file": "lightbluenameplate.png", "v": 1 },
+      { "file": "greennameplate.png", "v": 1 },
+      { "file": "graynameplate.png", "v": 1 },
+      { "file": "rednameplate.png", "v": 1 }
+    ]
+  },
   {
     "name": "lanlan3292",
     "color": "#9cb7e7",
